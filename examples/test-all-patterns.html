@@ -262,8 +262,8 @@
                     <option value="40">福岡県</option>
                     <option value="47">沖縄県</option>
                 </select>
-                <p class="error-text" data-text="error"></p>
             </div>
+            <p class="error-text" data-text="error"></p>
         </div>
         
         <div class="form-item">
@@ -313,8 +313,8 @@
                         <label for="contact3">郵送</label>
                     </div>
                 </div>
-                <p class="error-text" data-text="error"></p>
             </div>
+            <p class="error-text" data-text="error"></p>
         </div>
         
         <!-- ラジオボタン -->
@@ -350,8 +350,8 @@
                     <input type="checkbox" id="agree" name="agree[1]" value="同意する">
                     <label for="agree">個人情報保護方針に同意する</label>
                 </div>
-                <p class="error-text" data-text="error"></p>
             </div>
+            <p class="error-text" data-text="error"></p>
         </div>
         
         <button type="submit" data-submit="submit">送信</button>
@@ -361,11 +361,38 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             FormValidator.init({
+                validation: {
+                    validateOnInput: false,
+                    validateOnBlur: true,
+                    debounceDelay: 300
+                },
+                errorDisplay: {
+                    showOnValidation: true,
+                    clearOnFocus: true
+                },
+                customMessages: {
+                    required: 'この項目は必須です',
+                    email: '正しいメールアドレスを入力してください',
+                    'email-conf': 'メールアドレスが一致しません',
+                    tel: '正しい電話番号を入力してください',
+                    'postal-code': '正しい郵便番号を入力してください',
+                    name: '正しい名前を入力してください',
+                    furigana: '正しいふりがなを入力してください',
+                    hiragana: 'ひらがなで入力してください',
+                    katakana: 'カタカナで入力してください',
+                    password: '正しいパスワードを入力してください',
+                    text: '正しいテキストを入力してください',
+                    emesse1: '数字を入力してください',
+                    emesse2: '都道府県を選択してください',
+                    emesse3: '連絡方法を選択してください'
+                },
                 count: true,
-            }, {
-                emesse1: '数字を入力してください。',
-                emesse2: '都道府県を選択してください。',
-                emesse3: '連絡方法を選択してください。',
+                onCountUpdated: function(data) {
+                    var el = document.querySelector('[data-count_validate]');
+                    if (el) {
+                        el.textContent = (data.total - data.valid).toString();
+                    }
+                }
             });
             
             const form = document.getElementById('testForm');

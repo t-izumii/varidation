@@ -27,8 +27,6 @@ export class RequiredValidator extends BaseValidator {
      * 値が必須かどうかを検証
      */
     async validate(value: any, options?: ValidatorOptions): Promise<ValidationResult> {
-
-        console.log('required validate', value, options);
         // 値が空かチェック
         if (this.isEmpty(value)) {
             const message = this.determineErrorMessage(options);

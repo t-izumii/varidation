@@ -1,4 +1,5 @@
 import type { ValidationResult, ValidationError } from '../types';
+import { Validator } from './Validator';
 
 interface ValidationOptions {
     validateOnInput: boolean;
@@ -12,6 +13,7 @@ interface ValidationOptions {
  */
 export class ValidationEngine {
     private options: ValidationOptions;
+    private validator = new Validator();
 
     constructor(options: ValidationOptions) {
         this.options = options;
@@ -25,36 +27,10 @@ export class ValidationEngine {
         value: string,
         customMessages: Record<string, string> = {}
     ): Promise<ValidationResult> {
-        const errors: ValidationError[] = [];
-
-        // 基本的なバリデーション
-        if (field.hasAttribute('required') && !value.trim()) {
-            errors.push({
-                rule: 'required',
-                message: customMessages.required || 'この項目は必須です',
-                value
-            });
-        }
-
-        // input要素の場合の追加バリデーション
-        if (field instanceof HTMLInputElement) {
-            await this.validateInputField(field, value, errors, customMessages);
-        }
-
-        // select要素の場合の追加バリデーション
-        if (field instanceof HTMLSelectElement) {
-            this.validateSelectField(field, value, errors, customMessages);
-        }
-
-        // textarea要素の場合の追加バリデーション
-        if (field instanceof HTMLTextAreaElement) {
-            this.validateTextareaField(field, value, errors, customMessages);
-        }
-
-        return {
-            isValid: errors.length === 0,
-            errors
-        };
+        // ValidatorのvalidateElementを使う
+        return await this.validator.validateElement(field, {
+            customMessages
+        });
     }
 
     /**

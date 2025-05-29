@@ -110,6 +110,9 @@ export class FormManager {
         
         this.isInitialized = true;
         this.log('Initialization completed');
+
+        // 初期カウントを遅延実行で反映
+        setTimeout(() => this.updateCount(), 0);
     }
 
     /**
@@ -141,6 +144,28 @@ export class FormManager {
                 // バリデーションイベントを設定
                 this.setupFieldValidation(field, fieldId);
             }
+        });
+
+        // --- グループバリデーションのセットアップ ---
+        const groupValidators = [
+            { attr: 'data-check_validate', type: 'checkbox' },
+            { attr: 'data-radio_validate', type: 'radio' },
+            { attr: 'data-select_validate', type: 'select' }
+        ];
+        groupValidators.forEach(({ attr, type }) => {
+            const groupNodes = this.form.querySelectorAll(`[${attr}]`);
+            groupNodes.forEach((groupNode, idx) => {
+                const groupId = groupNode.getAttribute('name') || groupNode.getAttribute('id') || `${type}_group_${idx}`;
+                // グループの子要素を取得
+                let fields: NodeListOf<Element>;
+                if (type === 'select') {
+                    fields = groupNode.querySelectorAll('select');
+                } else {
+                    fields = groupNode.querySelectorAll(`input[type=${type}]`);
+                }
+                // グループバリデーションのセットアップ
+                this.setupGroupValidation(groupNode as HTMLElement, fields, groupId, attr);
+            });
         });
     }
 
@@ -239,8 +264,8 @@ export class FormManager {
      * カウントを更新
      */
     private updateCount(): void {
-        const validCount = this.fieldStates.getValidFieldCount();
-        const totalCount = this.fieldStates.getTotalFieldCount();
+        const validCount = this.fieldStates.getValidRequiredFieldCount();
+        const totalCount = this.fieldStates.getTotalRequiredFieldCount();
         
         this.log(`Count updated - valid: ${validCount}, total: ${totalCount}`);
         
@@ -450,5 +475,98 @@ export class FormManager {
     async validate(): Promise<void> {
         this.log('Manual validation triggered');
         await this.validateAllFields();
+    }
+
+    // グループバリデーションのセットアップ
+    private setupGroupValidation(
+        groupNode: HTMLElement,
+        fields: NodeListOf<Element>,
+        groupId: string,
+        attr: string
+    ) {
+        // 初期化
+        this.fieldStates.initializeField(groupId, groupNode as any, { isTouched: false });
+
+        // 各子要素にイベントリスナー
+        fields.forEach(field => {
+            field.addEventListener('change', () => {
+                this.validateGroupField(groupNode, fields, groupId, attr, true);
+            });
+        });
+
+        // 初回バリデーション（isUserAction: false）
+        this.validateGroupField(groupNode, fields, groupId, attr, false);
+    }
+
+    // グループバリデーションの実行
+    private validateGroupField(
+        groupNode: HTMLElement,
+        fields: NodeListOf<Element>,
+        groupId: string,
+        attr: string,
+        isUserAction: boolean = false
+    ) {
+        const validateRules = groupNode.getAttribute(attr);
+        let isValid = false;
+        let errorMsg = '';
+
+        // RequiredValidatorのデフォルトメッセージ仕様
+        const defaultMessages = {
+            'data-check_validate': {
+                agree: '個人情報保護方針の同意にチェックを入れてください。',
+                checkbox: 'チェックボックスを選択してください。',
+                default: '1つ以上選択してください'
+            },
+            'data-radio_validate': {
+                radiobox: 'ラジオボタンを選択してください。',
+                default: '1つ以上選択してください'
+            },
+            'data-select_validate': {
+                select: '選択してください。',
+                default: '選択してください'
+            }
+        };
+
+        if (attr === 'data-check_validate' || attr === 'data-radio_validate') {
+            isValid = Array.from(fields).some((field: any) => field.checked);
+            if (!isValid) {
+                // ルールに応じたメッセージ
+                let msg = '';
+                if (validateRules && validateRules.includes('agree')) {
+                    msg = defaultMessages['data-check_validate'].agree;
+                } else if (attr === 'data-check_validate') {
+                    msg = defaultMessages['data-check_validate'].checkbox;
+                } else if (attr === 'data-radio_validate') {
+                    msg = defaultMessages['data-radio_validate'].radiobox;
+                }
+                errorMsg = msg || defaultMessages[attr].default;
+            }
+        } else if (attr === 'data-select_validate') {
+            isValid = Array.from(fields).some((field: any) => field.value);
+            if (!isValid) {
+                errorMsg = defaultMessages['data-select_validate'].select;
+            }
+        }
+
+        // isTouched管理
+        const state = this.fieldStates.getField(groupId);
+        let isTouched = state?.isTouched ?? false;
+        if (isUserAction) isTouched = true;
+
+        this.fieldStates.updateField(groupId, {
+            isValid,
+            errors: isValid ? [] : [{ rule: 'required', message: errorMsg }],
+            isTouched
+        });
+
+        // エラー表示
+        if (!isValid && isTouched) {
+            this.errorDisplay.showFieldError(groupId, errorMsg, groupNode);
+        } else {
+            this.errorDisplay.clearField(groupId);
+        }
+
+        // カウント更新
+        this.updateCount();
     }
 }

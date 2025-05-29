@@ -179,18 +179,8 @@ export class Validator {
             rules.push(...element.dataset.validate.split(',').map(r => r.trim()));
         }
 
-        // 要素タイプに基づいた追加ルール
+        // required属性のみ自動追加（type属性には依存しない）
         if (element instanceof HTMLInputElement) {
-            // type属性に基づいたルール
-            if (element.type === 'email' && !rules.includes('email')) {
-                rules.push('email');
-            } else if (element.type === 'tel' && !rules.includes('tel')) {
-                rules.push('tel');
-            } else if (element.type === 'password' && !rules.includes('password')) {
-                rules.push('password');
-            }
-            
-            // required属性
             if (element.required && !rules.includes('required')) {
                 rules.push('required');
             }

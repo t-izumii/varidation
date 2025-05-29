@@ -15,13 +15,23 @@ export class FieldStateManager {
     /**
      * フィールドを初期化
      */
-    initializeField(fieldId: string, element: HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement): void {
+    initializeField(fieldId: string, element: HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement, initial?: Partial<FieldState>): void {
+        // 必須判定
+        const isRequired =
+            element.hasAttribute('required') ||
+            (element.dataset.validate && element.dataset.validate.split(',').map(v => v.trim()).includes('required'));
+
+        // 初期値が空なら isValid: false
+        const initialValue = element.value || '';
+        const isValid = isRequired ? !!initialValue.trim() : true;
+
         const initialState: FieldState = {
-            value: element.value || '',
-            isValid: true,
+            value: initialValue,
+            isValid: isValid,
             errors: [],
             isDirty: false,
-            isTouched: false
+            isTouched: false,
+            ...initial
         };
         this.fields.set(fieldId, initialState);
     }
@@ -127,5 +137,39 @@ export class FieldStateManager {
      */
     clear(): void {
         this.fields.clear();
+    }
+
+    // 必須フィールドのIDリストを返す
+    getRequiredFieldIds(): string[] {
+        const required: string[] = [];
+        for (const [fieldId, state] of this.fields) {
+            const el = document.querySelector(`[name='${fieldId}'], [id='${fieldId}']`);
+            if (el instanceof HTMLInputElement || el instanceof HTMLSelectElement || el instanceof HTMLTextAreaElement) {
+                if (
+                    el.hasAttribute('required') ||
+                    (el.dataset.validate && el.dataset.validate.split(',').map(v => v.trim()).includes('required'))
+                ) {
+                    required.push(fieldId);
+                }
+            }
+        }
+        return required;
+    }
+
+    // 必須フィールドのうちバリデーションOKな数
+    getValidRequiredFieldCount(): number {
+        let count = 0;
+        for (const fieldId of this.getRequiredFieldIds()) {
+            const state = this.fields.get(fieldId);
+            if (state && state.isValid) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    // 必須フィールドの総数
+    getTotalRequiredFieldCount(): number {
+        return this.getRequiredFieldIds().length;
     }
 }
