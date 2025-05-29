@@ -226,7 +226,7 @@
             <div class="form-key">郵便番号<span class="required">(必須)</span></div>
             <div class="form-val">
                 <div class="postal-group">
-                    〒<input type="text" name="postal" class="p-postal-code postal-code-input" data-validate="required,postal-code" size="8" maxlength="8" placeholder="123-4567">
+                    〒<input type="text" name="postal" class="p-postal-code postal-code-input" data-validate="required,postal-code,replace" size="8" maxlength="8" placeholder="123-4567">
                 </div>
                 <p class="error-text" data-text="error"></p>
             </div>
@@ -269,7 +269,21 @@
         <div class="form-item">
             <div class="form-key">数字<span class="required">(必須)</span></div>
             <div class="form-val">
-                <input type="tel" name="num" data-validate="required,number,emesse1" placeholder="12345">
+                <input type="tel" name="num1" data-validate="required,number" placeholder="12345">
+                <p class="error-text" data-text="error"></p>
+            </div>
+        </div>
+        <div class="form-item">
+            <div class="form-key">半角数字<span class="required">(必須)</span></div>
+            <div class="form-val">
+                <input type="tel" name="num2" data-validate="required,halfWidth" placeholder="12345">
+                <p class="error-text" data-text="error"></p>
+            </div>
+        </div>
+        <div class="form-item">
+            <div class="form-key">半角数字リプレイス付き<span class="required">(必須)</span></div>
+            <div class="form-val">
+                <input type="tel" name="num3" data-validate="required,halfWidth,replace" placeholder="12345">
                 <p class="error-text" data-text="error"></p>
             </div>
         </div>
@@ -371,20 +385,6 @@
                     clearOnFocus: true
                 },
                 customMessages: {
-                    required: 'この項目は必須です',
-                    email: '正しいメールアドレスを入力してください',
-                    'email-conf': 'メールアドレスが一致しません',
-                    tel: '正しい電話番号を入力してください',
-                    'postal-code': '正しい郵便番号を入力してください',
-                    name: '正しい名前を入力してください',
-                    furigana: '正しいふりがなを入力してください',
-                    hiragana: 'ひらがなで入力してください',
-                    katakana: 'カタカナで入力してください',
-                    password: '正しいパスワードを入力してください',
-                    text: '正しいテキストを入力してください',
-                    emesse1: '数字を入力してください',
-                    emesse2: '都道府県を選択してください',
-                    emesse3: '連絡方法を選択してください'
                 },
                 count: true,
                 onCountUpdated: function(data) {

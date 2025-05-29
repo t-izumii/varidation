@@ -7,15 +7,15 @@ import { ValidationResult, ValidatorOptions } from '../types';
  */
 export class TextValidator extends BaseValidator {
     private patterns = {
-        number: /^\d+$/,
+        number: /^[0-9０-９]+$/,
         hiragana: /^[ぁ-んー　 ]+$/,
         katakana: /^[ァ-ヶー　 ]+$/,
-        halfWidth: /^[0-9\-]+$/,
+        halfWidth: /^[0-9]+$/,
         password: /^(?=.*?[a-z])(?=.*?\d)[a-z\d]{8,16}$/i, // 半角英数字をそれぞれ含む8文字以上16文字以下
     };
 
     private defaultMessages = {
-        number: '半角数字で入力してください。',
+        number: '数字で入力してください。',
         hiragana: '全角ひらがなで入力してください。',
         katakana: '全角カタカナで入力してください。',
         halfWidth: '半角数字で入力してください。',
@@ -48,18 +48,18 @@ export class TextValidator extends BaseValidator {
         // 各種テキスト形式の検証
         switch (validationType) {
             case 'number':
-                // 半角数字チェックが必要な場合
-                if (options?.checkHalfWidth !== false) {
+                // halfWidthがバリデーションルールに含まれている場合のみ半角数字チェック
+                const hasHalfWidth = options?.validationTypes && options.validationTypes.includes('halfWidth');
+                if (hasHalfWidth) {
                     const normalizedValue = this.normalizeNumber(stringValue);
                     if (!this.patterns.halfWidth.test(normalizedValue)) {
-                        const message = this.createErrorMessage('halfwidth', this.defaultMessages.halfWidth, options);
+                        const message = this.defaultMessages.halfWidth;
                         return this.createFailureResult([
                             this.createError('halfwidth', message, value)
                         ]);
                     }
-                    // 正規化された値で数字チェック
                     if (!this.patterns.number.test(normalizedValue)) {
-                        const message = this.createErrorMessage('number', this.defaultMessages.number, options);
+                        const message = this.defaultMessages.number;
                         return this.createFailureResult([
                             this.createError('number', message, value)
                         ]);
@@ -67,11 +67,20 @@ export class TextValidator extends BaseValidator {
                 } else {
                     // 通常の数字チェック
                     if (!this.patterns.number.test(stringValue)) {
-                        const message = this.createErrorMessage('number', this.defaultMessages.number, options);
+                        const message = this.defaultMessages.number;
                         return this.createFailureResult([
                             this.createError('number', message, value)
                         ]);
                     }
+                }
+                break;
+
+            case 'halfWidth':
+                if (!this.patterns.halfWidth.test(stringValue)) {
+                    const message = this.createErrorMessage('halfwidth', this.defaultMessages.halfWidth, options);
+                    return this.createFailureResult([
+                        this.createError('halfwidth', message, value)
+                    ]);
                 }
                 break;
 

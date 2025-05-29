@@ -6,6 +6,7 @@ import { TelValidator } from '../validators/TelValidator';
 import { PostalCodeValidator } from '../validators/PostalCodeValidator';
 import { TextValidator } from '../validators/TextValidator';
 import { CustomValidator } from '../validators/CustomValidator';
+import { Normalizer } from '../utils/Normalizer';
 
 /**
  * バリデーションエンジン
@@ -54,6 +55,11 @@ export class Validator {
         });
         
         this.registerValidatorFactory('password', () => {
+            const validator = new TextValidator();
+            return validator;
+        });
+        // halfWidth も TextValidator で登録
+        this.registerValidatorFactory('halfWidth', () => {
             const validator = new TextValidator();
             return validator;
         });
@@ -124,26 +130,36 @@ export class Validator {
      */
     async validate(value: any, rules: string | string[], options?: ValidatorOptions): Promise<ValidationResult> {
         // ルールを配列に変換
-        const ruleArray = typeof rules === 'string' ? rules.split(',').map(r => r.trim()) : rules;
-        
+        let ruleArray = typeof rules === 'string' ? rules.split(',').map(r => r.trim()) : [...rules];
+
+        // 'replace' オプションが含まれていたら値を正規化
+        let processedValue = value;
+        if (ruleArray.includes('replace')) {
+            if (typeof value === 'string') {
+                // 全角数字を半角に、長音記号などをハイフンに
+                let replaced = value
+                    .replace(/[０-９]/g, (s) => String.fromCharCode(s.charCodeAt(0) - 0xfee0))
+                    .replace(/[ー－—―]/g, '-');
+                value = replaced;
+                // 'replace' をルールから除外
+                ruleArray = ruleArray.filter(r => r !== 'replace');
+            }
+        }
         // オプションにバリデーションタイプを追加（互換性のため）
         const validationOptions = {
             ...options,
             validationTypes: ruleArray
         };
-        
         // テキストバリデーター用のタイプを設定
         if (ruleArray.includes('number') || ruleArray.includes('hiragana') || 
-            ruleArray.includes('katakana') || ruleArray.includes('password')) {
-            const textType = ruleArray.find(r => ['number', 'hiragana', 'katakana', 'password'].includes(r));
+            ruleArray.includes('katakana') || ruleArray.includes('password') || ruleArray.includes('halfWidth')) {
+            const textType = ruleArray.find(r => ['number', 'hiragana', 'katakana', 'password', 'halfWidth'].includes(r));
             if (textType) {
                 validationOptions.textType = textType;
             }
         }
-
         // バリデーターチェーンを構築
         const validatorChain = this.buildValidatorChain(ruleArray, validationOptions);
-        
         if (!validatorChain) {
             // バリデーターがない場合は成功を返す
             return {
@@ -151,10 +167,9 @@ export class Validator {
                 errors: []
             };
         }
-
         // バリデーションを実行
         try {
-            return await validatorChain.validate(value, validationOptions);
+            return await validatorChain.validate(processedValue, validationOptions);
         } catch (error) {
             // エラーが発生した場合
             return {
@@ -215,18 +230,30 @@ export class Validator {
      */
     async validateElement(element: HTMLElement, options?: ValidatorOptions): Promise<ValidationResult> {
         const rules = this.getRulesFromElement(element);
-        const value = this.getElementValue(element);
-        
+        let value = this.getElementValue(element);
+
+        // 'replace' オプションが含まれていたら、値を正規化し、input/textareaの値も書き換える
+        if (rules.includes('replace')) {
+            if (typeof value === 'string') {
+                // 全角数字を半角に、長音記号などをハイフンに
+                let replaced = value
+                    .replace(/[０-９]/g, (s) => String.fromCharCode(s.charCodeAt(0) - 0xfee0))
+                    .replace(/[ー－—―]/g, '-');
+                value = replaced;
+                // input/textareaの値も書き換え
+                if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement) {
+                    element.value = replaced;
+                }
+            }
+        }
         // 要素タイプをオプションに追加
         const elementOptions = {
             ...options,
             elementType: element.tagName.toLowerCase()
         };
-        
         if (element instanceof HTMLInputElement) {
             elementOptions.elementType = element.type;
         }
-
         return this.validate(value, rules, elementOptions);
     }
 }
