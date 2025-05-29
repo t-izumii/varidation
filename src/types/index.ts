@@ -58,6 +58,7 @@ export interface FormManagerOptions {
   onFormValidated?: (data: FormValidationEventData) => void;
   onCountUpdated?: (data: CountUpdateEventData) => void;
   onSubmitStateChanged?: (data: SubmitStateEventData) => void;
+  disableSubmitUntilValid?: boolean;
 }
 
 export interface FieldValidationEventData {

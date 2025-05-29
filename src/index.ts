@@ -78,7 +78,8 @@ export class FormValidator {
             customMessages: {
                 ...options?.customMessages,
                 ...errorMessages
-            }
+            },
+            disableSubmitUntilValid: options?.disableSubmitUntilValid
         };
 
         // 既存のオプションを変換

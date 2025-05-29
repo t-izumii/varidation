@@ -275,14 +275,17 @@ export class FormManager {
     private updateCount(): void {
         const validCount = this.fieldStates.getValidRequiredFieldCount();
         const totalCount = this.fieldStates.getTotalRequiredFieldCount();
-        
         this.log(`Count updated - valid: ${validCount}, total: ${totalCount}`);
-        
         this.eventManager.emit(ValidationEvents.COUNT_UPDATED, {
             valid: validCount,
             total: totalCount,
             isComplete: validCount === totalCount
         });
+        // 追加: ボタンの活性/非活性制御
+        if (this.submitButton && this.options.disableSubmitUntilValid) {
+            // 必須項目がすべて有効かつ全フィールドにエラーがない場合のみ有効化
+            this.submitButton.disabled = !(validCount === totalCount && this.fieldStates.isValid);
+        }
     }
 
     /**
@@ -382,18 +385,11 @@ export class FormManager {
         this.log('Resetting form');
         // フィールド状態をリセット
         this.fieldStates.reset();
-        
         // エラー表示をクリア
         this.errorDisplay.clearAll();
-        
         // カウントを更新
         this.updateCount();
-        
-        // 送信ボタンを有効化
-        if (this.submitButton) {
-            this.submitButton.disabled = false;
-        }
-        
+        // 送信ボタンの状態もupdateCountで制御するため、ここでの個別有効化は不要
         // イベントを発火
         this.eventManager.emit(ValidationEvents.FORM_RESET, { form: this.form });
     }
