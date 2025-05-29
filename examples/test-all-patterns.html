@@ -375,24 +375,9 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             FormValidator.init({
-                validation: {
-                    validateOnInput: false,
-                    validateOnBlur: true,
-                    debounceDelay: 300
-                },
-                errorDisplay: {
-                    showOnValidation: true,
-                    clearOnFocus: true
-                },
                 customMessages: {
                 },
-                count: true,
-                onCountUpdated: function(data) {
-                    var el = document.querySelector('[data-count_validate]');
-                    if (el) {
-                        el.textContent = (data.total - data.valid).toString();
-                    }
-                }
+                count: true
             });
             
             const form = document.getElementById('testForm');

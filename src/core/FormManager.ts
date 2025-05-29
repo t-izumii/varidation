@@ -27,6 +27,26 @@ export class FormManager {
     private isInitialized: boolean = false;
     private debug: boolean = false;
 
+    // 1. デフォルトオプションを定義
+    private static readonly DEFAULT_OPTIONS = {
+        validation: {
+            validateOnInput: false,
+            validateOnBlur: true,
+            debounceDelay: 300
+        },
+        errorDisplay: {
+            showOnValidation: true,
+            clearOnFocus: true,
+            animationDuration: 200
+        },
+        onCountUpdated: function(data: { total: number; valid: number }) {
+            var el = document.querySelector('[data-count_validate]');
+            if (el) {
+                el.textContent = (data.total - data.valid).toString();
+            }
+        }
+    };
+
     constructor(form: HTMLFormElement, options: Partial<FormManagerOptions> = {}) {
         this.form = form;
         this.options = this.mergeOptions(options);
@@ -55,22 +75,11 @@ export class FormManager {
      */
     private mergeOptions(options: Partial<FormManagerOptions>): FormManagerOptions {
         const merged = {
-            validation: {
-                validateOnInput: true,
-                validateOnBlur: true,
-                debounceDelay: 300,
-                ...options.validation
-            },
-            errorDisplay: {
-                showOnValidation: true,
-                clearOnFocus: true,
-                animationDuration: 200,
-                ...options.errorDisplay
-            },
+            ...FormManager.DEFAULT_OPTIONS,
+            ...options,
             customMessages: options.customMessages || {},
             onFieldValidated: options.onFieldValidated,
             onFormValidated: options.onFormValidated,
-            onCountUpdated: options.onCountUpdated,
             onSubmitStateChanged: options.onSubmitStateChanged
         };
         
