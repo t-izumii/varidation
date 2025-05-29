@@ -489,6 +489,10 @@ export class FormManager {
         groupId: string,
         attr: string
     ) {
+        // nameもidも無い場合はid属性を付与
+        if (!groupNode.getAttribute('name') && !groupNode.getAttribute('id')) {
+            groupNode.setAttribute('id', groupId);
+        }
         // 初期化
         this.fieldStates.initializeField(groupId, groupNode as any, { isTouched: false });
 

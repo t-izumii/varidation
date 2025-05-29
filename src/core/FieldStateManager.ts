@@ -139,17 +139,30 @@ export class FieldStateManager {
         this.fields.clear();
     }
 
-    // 必須フィールドのIDリストを返す
+    // 必須フィールドのIDリストを返す（グループバリデーションも含む）
     getRequiredFieldIds(): string[] {
         const required: string[] = [];
         for (const [fieldId, state] of this.fields) {
             const el = document.querySelector(`[name='${fieldId}'], [id='${fieldId}']`);
             if (el instanceof HTMLInputElement || el instanceof HTMLSelectElement || el instanceof HTMLTextAreaElement) {
+                // 通常の必須判定
                 if (
                     el.hasAttribute('required') ||
                     (el.dataset.validate && el.dataset.validate.split(',').map(v => v.trim()).includes('required'))
                 ) {
                     required.push(fieldId);
+                    continue;
+                }
+            }
+            // グループバリデーション（チェックボックス・ラジオ・セレクト）
+            if (el instanceof HTMLElement) {
+                if (
+                    el.hasAttribute('data-check_validate') ||
+                    el.hasAttribute('data-radio_validate') ||
+                    el.hasAttribute('data-select_validate')
+                ) {
+                    required.push(fieldId);
+                    continue;
                 }
             }
         }
