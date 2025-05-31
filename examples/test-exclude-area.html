@@ -197,6 +197,12 @@
     <div class="count-display">
         あと<span data-count_validate="true">0</span>項目入力してください。
     </div>
+    <button type="button" class="toggle-button" onclick="FormValidator.check()">
+        全フィールドのバリデーションを実行
+    </button>
+    <button type="button" class="toggle-button" onclick="FormValidator.update()">
+        カウント更新テスト
+    </button>
     
     <form id="testForm">
         <!-- 通常の必須フィールド -->
@@ -224,7 +230,7 @@
         </button>
         
         <!-- 除外エリア1 -->
-        <div class="hidden-area" id="hiddenArea1" data-validate-hidden>
+        <div class="hidden-area hidden" id="hiddenArea1" data-validate-hidden>
             <div class="section-title">除外エリア内の必須フィールド</div>
             
             <div class="form-item">
@@ -352,110 +358,33 @@
                 alert('フォーム送信完了！');
             });
             
-            // デバッグ情報をコンソールに表示
-            console.log('FormManager インスタンス:', formManager);
-            console.log('updateValidationCount method exists:', typeof formManager.updateValidationCount);
-            console.log('初期デバッグ情報:', formManager.getDebugInfo());
-            
             // エラーテスト用のボタンを追加
-            const errorTestButton = document.createElement('button');
-            errorTestButton.type = 'button';
-            errorTestButton.textContent = '全フィールドのバリデーションを実行';
-            errorTestButton.className = 'toggle-button';
-            errorTestButton.style.marginLeft = '10px';
-            errorTestButton.onclick = function() {
-                formManager.validate();
-            };
+            // const errorTestButton = document.createElement('button');
+            // errorTestButton.type = 'button';
+            // errorTestButton.textContent = '全フィールドのバリデーションを実行';
+            // errorTestButton.className = 'toggle-button';
+            // errorTestButton.style.marginLeft = '10px';
+            // errorTestButton.onclick = function() {
+            //     FormValidator.check();
+            // };
+
+            // const updateTestButton = document.createElement('button');
+            // updateTestButton.type = 'button';
+            // updateTestButton.textContent = 'カウント更新テスト';
+            // updateTestButton.className = 'toggle-button';
+            // updateTestButton.style.marginLeft = '10px';
+            // updateTestButton.onclick = function() {
+            //     FormValidator.update();
+            // };
             
             const toggleButton = document.querySelector('.toggle-button');
             toggleButton.parentNode.insertBefore(errorTestButton, toggleButton.nextSibling);
+            toggleButton.parentNode.insertBefore(updateTestButton, errorTestButton.nextSibling);
             
             // 初期カウントを設定（遅延実行）
             setTimeout(() => {
-                if (typeof window.manualUpdateCount === 'function') {
-                    window.manualUpdateCount();
-                    console.log('初期カウントを設定しました');
-                }
+                FormValidator.update();
             }, 500);
-            
-            // グローバル関数として公開
-            window.manualUpdateCount = function() {
-                console.log('Manual count update function called');
-                const countElement = document.querySelector('[data-count_validate]');
-                if (countElement) {
-                    // 必須フィールドの特定とカウント
-                    let totalRequired = 0;
-                    let validCount = 0;
-                    
-                    // 1. 通常の必須フィールドをチェック
-                    const regularFields = document.querySelectorAll('input[data-validate*="required"], input[required], textarea[data-validate*="required"], textarea[required], select[data-validate*="required"], select[required]');
-                    regularFields.forEach(field => {
-                        if (!isFieldInHiddenArea(field)) {
-                            totalRequired++;
-                            if (field.type === 'checkbox' || field.type === 'radio') {
-                                // チェックボックス・ラジオボタンは個別に処理
-                                if (field.checked) {
-                                    validCount++;
-                                }
-                            } else if (field.value && field.value.trim()) {
-                                validCount++;
-                            }
-                        }
-                    });
-                    
-                    // 2. グループバリデーションのフィールドをチェック
-                    const groupFields = document.querySelectorAll('[data-check_validate*="required"], [data-radio_validate*="required"], [data-select_validate*="required"]');
-                    groupFields.forEach(groupElement => {
-                        if (!isFieldInHiddenArea(groupElement)) {
-                            totalRequired++;
-                            
-                            // グループ内のフィールドをチェック
-                            const groupInputs = groupElement.querySelectorAll('input[type="checkbox"], input[type="radio"], select');
-                            let hasValidInput = false;
-                            
-                            groupInputs.forEach(input => {
-                                if (input.type === 'checkbox' || input.type === 'radio') {
-                                    if (input.checked) {
-                                        hasValidInput = true;
-                                    }
-                                } else if (input.value && input.value.trim()) {
-                                    hasValidInput = true;
-                                }
-                            });
-                            
-                            if (hasValidInput) {
-                                validCount++;
-                            }
-                        }
-                    });
-                    
-                    const remaining = totalRequired - validCount;
-                    countElement.textContent = remaining.toString();
-                    console.log(`Manual count update - total: ${totalRequired}, valid: ${validCount}, remaining: ${remaining}`);
-                    
-                    return { total: totalRequired, valid: validCount, remaining: remaining };
-                }
-                return null;
-            };
-            
-            // ヘルパー関数: フィールドが除外エリア内かどうかをチェック
-            function isFieldInHiddenArea(element) {
-                // 要素自身に除外属性があるかチェック
-                if (element.hasAttribute('data-validate-hidden')) {
-                    return true;
-                }
-                
-                // 親要素を遡って除外属性を持つ要素を探す
-                let parent = element.parentElement;
-                while (parent && parent !== document.body) {
-                    if (parent.hasAttribute('data-validate-hidden')) {
-                        return true;
-                    }
-                    parent = parent.parentElement;
-                }
-                
-                return false;
-            }
         });
         
         // 除外エリアの表示/非表示を切り替える関数
@@ -463,57 +392,20 @@
             const hiddenArea = document.getElementById('hiddenArea1');
             const isHidden = hiddenArea.hasAttribute('data-validate-hidden');
             
-            console.log('--- 除外エリア切り替え開始 ---');
-            console.log('切り替え前の状態 - isHidden:', isHidden);
-            
-            // 切り替え前のカウントを表示
-            if (typeof window.manualUpdateCount === 'function') {
-                const beforeCount = window.manualUpdateCount();
-                console.log('切り替え前のカウント:', beforeCount);
-            }
-            
             if (isHidden) {
                 // 除外属性を削除（バリデーション対象に含める）
                 hiddenArea.removeAttribute('data-validate-hidden');
                 hiddenArea.classList.remove('hidden');
-                console.log('除外エリアをバリデーション対象に含めました');
             } else {
                 // 除外属性を追加（バリデーション対象から除外）
                 hiddenArea.setAttribute('data-validate-hidden', '');
                 hiddenArea.classList.add('hidden');
-                console.log('除外エリアをバリデーション対象から除外しました');
             }
             
             // カウントを手動で更新
             const formManager = FormValidator.getInstance();
-            if (formManager) {
-                console.log('切り替え前のデバッグ情報:', formManager.getDebugInfo());
-                
-                // updateValidationCountメソッドが存在しない場合の代替手段
-                if (typeof formManager.updateValidationCount === 'function') {
-                    formManager.updateValidationCount();
-                    console.log('FormManager.updateValidationCount() を実行しました');
-                } else {
-                    console.warn('updateValidationCount method not found, using manual update');
-                    // グローバル関数を使用
-                    if (typeof window.manualUpdateCount === 'function') {
-                        const afterCount = window.manualUpdateCount();
-                        console.log('手動カウント更新完了:', afterCount);
-                    }
-                }
-                
-                // 少し遅延させてからデバッグ情報を表示
-                setTimeout(() => {
-                    console.log('切り替え後のデバッグ情報:', formManager.getDebugInfo());
-                    
-                    // 最終確認のカウント
-                    if (typeof window.manualUpdateCount === 'function') {
-                        const finalCount = window.manualUpdateCount();
-                        console.log('最終カウント:', finalCount);
-                    }
-                    
-                    console.log('--- 除外エリア切り替え終了 ---');
-                }, 200);
+            if (formManager) {       
+                FormValidator.update();
             }
         }
     </script>

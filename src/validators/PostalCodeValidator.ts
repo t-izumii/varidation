@@ -22,8 +22,6 @@ export class PostalCodeValidator extends BaseValidator {
      * 郵便番号の形式を検証
      */
     async validate(value: any, options?: ValidatorOptions): Promise<ValidationResult> {
-        // 空の場合はスキップ（RequiredValidatorで処理）
-        console.log('postal-code validate', value, options);
         if (this.isEmpty(value)) {
             return await this.handleNext(value, options);
         }

@@ -148,7 +148,9 @@ export class FormManager {
                 this.elementToIdMap.set(field, fieldId);
                 
                 // フィールド状態を初期化
-                this.fieldStates.initializeField(fieldId, field);
+                this.fieldStates.initializeField(fieldId, field, undefined, (element: HTMLElement) => {
+                    return this.isFieldInHiddenAreaInternal(element);
+                });
                 
                 // バリデーションイベントを設定
                 this.setupFieldValidation(field, fieldId);
@@ -232,7 +234,7 @@ export class FormManager {
         this.log(`Validating field: ${fieldId} with value:`, value);
         
         // 除外エリア内のフィールドはバリデーションをスキップ
-        if (this.fieldStates.isFieldInHiddenArea && this.fieldStates.isFieldInHiddenArea(fieldId)) {
+        if (this.isFieldInHiddenAreaInternal(field)) {
             this.log(`Skipping validation for field in hidden area: ${fieldId}`);
             
             // 除外エリア内のフィールドは常に有効として扱う
@@ -293,11 +295,16 @@ export class FormManager {
      * カウントを更新
      */
     private updateCount(): void {
-        const validCount = this.fieldStates.getValidRequiredFieldCount();
-        const totalCount = this.fieldStates.getTotalRequiredFieldCount();
+        const isFieldInHiddenAreaCallback = (fieldId: string) => {
+            const element = document.querySelector(`[name='${fieldId}'], [id='${fieldId}']`);
+            return element ? this.isFieldInHiddenAreaInternal(element as HTMLElement) : false;
+        };
+        
+        const validCount = this.fieldStates.getValidRequiredFieldCount(isFieldInHiddenAreaCallback);
+        const totalCount = this.fieldStates.getTotalRequiredFieldCount(isFieldInHiddenAreaCallback);
         
         this.log(`Count updated - valid: ${validCount}, total: ${totalCount}`);
-        this.log(`Required field IDs:`, this.fieldStates.getRequiredFieldIds());
+        this.log(`Required field IDs:`, this.fieldStates.getRequiredFieldIds(isFieldInHiddenAreaCallback));
         
         this.eventManager.emit(ValidationEvents.COUNT_UPDATED, {
             valid: validCount,
@@ -325,7 +332,7 @@ export class FormManager {
             if (!this.isValid) {
                 event.preventDefault();
                 this.log('Form submission prevented, validating all fields');
-                this.validateAllFields();
+                this.validateAllFieldsInternal();
             }
         });
 
@@ -337,10 +344,10 @@ export class FormManager {
     }
 
     /**
-     * 全フィールドを検証
+     * 全フィールドを検証（内部用、シンプル版）
      */
-    private async validateAllFields(): Promise<void> {
-        this.log('Validating all fields');
+    private async validateAllFieldsInternal(): Promise<void> {
+        this.log('Validating all fields (internal)');
         const fields = this.form.querySelectorAll('input, select, textarea');
         const promises: Promise<void>[] = [];
 
@@ -500,11 +507,53 @@ export class FormManager {
     }
 
     /**
-     * 公開API: 手動でバリデーションを実行
+     * 公開API: 手動でバリデーションを実行（簡易版）
      */
     async validate(): Promise<void> {
         this.log('Manual validation triggered');
-        await this.validateAllFields();
+        await this.validateAllFieldsInternal();
+    }
+
+    /**
+     * 公開API: 全フィールドを検証（必須項目以外でも入力があるフィールドもバリデーション実行）
+     */
+    async validateAllFields(): Promise<void> {
+        this.log('Validating all fields (comprehensive)');
+        const fields = this.form.querySelectorAll('input, select, textarea');
+        const promises: Promise<void>[] = [];
+
+        fields.forEach((field: Element) => {
+            if (field instanceof HTMLInputElement || 
+                field instanceof HTMLSelectElement || 
+                field instanceof HTMLTextAreaElement) {
+                
+                const fieldId = this.elementToIdMap.get(field);
+                if (fieldId) {
+                    // 必須項目か、あるいは値が入力されているフィールドのみバリデーション実行
+                    const isRequired = field.hasAttribute('required') || 
+                                     (field.dataset.validate && field.dataset.validate.includes('required'));
+                    const hasValue = field.value && field.value.trim();
+                    
+                    if (isRequired || hasValue) {
+                        promises.push(this.validateField(field, fieldId));
+                    }
+                }
+            }
+        });
+
+        await Promise.all(promises);
+
+        // グループバリデーションも再実行
+        this.reevaluateGroupValidations();
+
+        // フォーム全体のバリデーション結果を発火
+        this.eventManager.emit(ValidationEvents.FORM_VALIDATED, {
+            form: this.form,
+            isValid: this.isValid,
+            fieldStates: this.fieldStates.getAllStates()
+        });
+        
+        this.log('All fields validation completed, isValid:', this.isValid);
     }
 
     /**
@@ -514,7 +563,10 @@ export class FormManager {
         this.log('Manual count update triggered');
         
         // 除外エリアの状態変更に対応するため、全フィールドの必須状態を再評価
-        this.fieldStates.reevaluateAllFieldsRequiredState();
+        this.fieldStates.reevaluateAllFieldsRequiredState((fieldId: string) => {
+            const element = document.querySelector(`[name='${fieldId}'], [id='${fieldId}']`);
+            return element ? this.isFieldInHiddenAreaInternal(element as HTMLElement) : false;
+        });
         
         // 除外エリア内のフィールドのエラーをクリア
         this.clearHiddenAreaErrors();
@@ -526,13 +578,42 @@ export class FormManager {
     }
 
     /**
+     * ヘルパー関数: フィールドが除外エリア内かどうかをチェック（公開API）
+     */
+    isFieldInHiddenArea(element: HTMLElement): boolean {
+        // 要素自身に除外属性があるかチェック
+        if (element.hasAttribute('data-validate-hidden')) {
+            return true;
+        }
+        
+        // 親要素を遡って除外属性を持つ要素を探す
+        let parent = element.parentElement;
+        while (parent && parent !== document.body) {
+            if (parent.hasAttribute('data-validate-hidden')) {
+                return true;
+            }
+            parent = parent.parentElement;
+        }
+        
+        return false;
+    }
+
+    /**
+     * ヘルパー関数: フィールドが除外エリア内かどうかをチェック（内部用）
+     */
+    private isFieldInHiddenAreaInternal(element: HTMLElement): boolean {
+        return this.isFieldInHiddenArea(element);
+    }
+
+    /**
      * 除外エリア内のフィールドのエラーをクリア
      */
     private clearHiddenAreaErrors(): void {
         const allStates = this.fieldStates.getAllStates();
         
         for (const fieldId in allStates) {
-            if (this.fieldStates.isFieldInHiddenArea(fieldId)) {
+            const element = document.querySelector(`[name='${fieldId}'], [id='${fieldId}']`);
+            if (element && this.isFieldInHiddenAreaInternal(element as HTMLElement)) {
                 // 除外エリア内のフィールドの状態を有効に更新
                 this.fieldStates.updateField(fieldId, {
                     isValid: true,
@@ -589,7 +670,7 @@ export class FormManager {
         }
         
         // 除外エリア内のグループかチェック
-        const isInHiddenArea = this.fieldStates.isFieldInHiddenArea(groupId);
+        const isInHiddenArea = this.isFieldInHiddenAreaInternal(groupNode);
         
         this.log(`Setting up group validation for ${groupId}, isInHiddenArea: ${isInHiddenArea}`);
         
@@ -598,6 +679,8 @@ export class FormManager {
             isTouched: false,
             isValid: isInHiddenArea,  // 除外エリア内は最初から有効
             errors: []
+        }, (element: HTMLElement) => {
+            return this.isFieldInHiddenAreaInternal(element);
         });
 
         // 各子要素にイベントリスナー
@@ -620,7 +703,7 @@ export class FormManager {
         isUserAction: boolean = false
     ) {
         // 除外エリア内のグループはバリデーションをスキップ
-        if (this.fieldStates.isFieldInHiddenArea(groupId)) {
+        if (this.isFieldInHiddenAreaInternal(groupNode)) {
             this.log(`Skipping group validation for hidden area: ${groupId}`);
             
             // 除外エリア内のグループは常に有効として扱う
@@ -687,7 +770,7 @@ export class FormManager {
 
         this.fieldStates.updateField(groupId, {
             isValid,
-            errors: isValid ? [] : [{ rule: 'required', message: errorMsg }],
+            errors: isValid ? [] : [{ rule: 'required', message: errorMsg, value: undefined }],
             isTouched
         });
 

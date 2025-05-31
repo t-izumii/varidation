@@ -15,9 +15,11 @@ export class FieldStateManager {
     /**
      * フィールドを初期化
      */
-    initializeField(fieldId: string, element: HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement, initial?: Partial<FieldState>): void {
+    initializeField(fieldId: string, element: HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement, initial?: Partial<FieldState>, isFieldInHiddenAreaCallback?: (element: HTMLElement) => boolean): void {
         // 除外エリア内のフィールドかチェック
-        const isInHiddenArea = this.checkFieldInHiddenArea(fieldId);
+        const isInHiddenArea = isFieldInHiddenAreaCallback ? 
+                              isFieldInHiddenAreaCallback(element) :
+                              this.checkFieldInHiddenArea(fieldId);
         
         // 必須判定（除外エリア内の場合はrequiredを無視）
         const isRequired = !isInHiddenArea && (
@@ -182,7 +184,7 @@ export class FieldStateManager {
     /**
      * 除外エリアの状態が変更された時にフィールドの必須状態を再評価
      */
-    reevaluateFieldRequiredState(fieldId: string): void {
+    reevaluateFieldRequiredState(fieldId: string, isFieldInHiddenAreaCallback?: (fieldId: string) => boolean): void {
         const element = document.querySelector(`[name='${fieldId}'], [id='${fieldId}']`);
         if (!element || !(element instanceof HTMLInputElement || element instanceof HTMLSelectElement || element instanceof HTMLTextAreaElement)) {
             return;
@@ -193,8 +195,10 @@ export class FieldStateManager {
             return;
         }
         
-        // 除外エリア内かチェック
-        const isInHiddenArea = this.checkFieldInHiddenArea(fieldId);
+        // 除外エリア内かチェック（コールバックがある場合はそれを使用）
+        const isInHiddenArea = isFieldInHiddenAreaCallback ? 
+                              isFieldInHiddenAreaCallback(fieldId) : 
+                              this.checkFieldInHiddenArea(fieldId);
         
         // 必須判定（除外エリア内の場合はrequiredを無視）
         const isRequired = !isInHiddenArea && (
@@ -229,20 +233,22 @@ export class FieldStateManager {
     /**
      * 全フィールドの必須状態を再評価
      */
-    reevaluateAllFieldsRequiredState(): void {
+    reevaluateAllFieldsRequiredState(isFieldInHiddenAreaCallback?: (fieldId: string) => boolean): void {
         for (const fieldId of this.fields.keys()) {
-            this.reevaluateFieldRequiredState(fieldId);
+            this.reevaluateFieldRequiredState(fieldId, isFieldInHiddenAreaCallback);
         }
     }
 
     // 必須フィールドのIDリストを返す（グループバリデーションも含む、除外エリアは除く）
-    getRequiredFieldIds(): string[] {
+    getRequiredFieldIds(isFieldInHiddenAreaCallback?: (fieldId: string) => boolean): string[] {
         const required: string[] = [];
         const excluded: string[] = [];
         
         for (const [fieldId, state] of this.fields) {
             // 除外エリア内のフィールドかチェック
-            const isInHiddenArea = this.checkFieldInHiddenArea(fieldId);
+            const isInHiddenArea = isFieldInHiddenAreaCallback ? 
+                                  isFieldInHiddenAreaCallback(fieldId) :
+                                  this.checkFieldInHiddenArea(fieldId);
             
             if (isInHiddenArea) {
                 excluded.push(fieldId);
@@ -283,9 +289,9 @@ export class FieldStateManager {
     }
 
     // 必須フィールドのうちバリデーションOKな数
-    getValidRequiredFieldCount(): number {
+    getValidRequiredFieldCount(isFieldInHiddenAreaCallback?: (fieldId: string) => boolean): number {
         let count = 0;
-        for (const fieldId of this.getRequiredFieldIds()) {
+        for (const fieldId of this.getRequiredFieldIds(isFieldInHiddenAreaCallback)) {
             const state = this.fields.get(fieldId);
             if (state && state.isValid) {
                 count++;
@@ -295,7 +301,7 @@ export class FieldStateManager {
     }
 
     // 必須フィールドの総数
-    getTotalRequiredFieldCount(): number {
-        return this.getRequiredFieldIds().length;
+    getTotalRequiredFieldCount(isFieldInHiddenAreaCallback?: (fieldId: string) => boolean): number {
+        return this.getRequiredFieldIds(isFieldInHiddenAreaCallback).length;
     }
 }

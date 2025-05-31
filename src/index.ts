@@ -103,6 +103,29 @@ export class FormValidator {
     static getInstance(): FormManager | null {
         return this.instance;
     }
+
+    /**
+     * count、disableSubmitUntilValidの必須の数を再チェック
+     */
+    static update(): void {
+        if (this.instance) {
+            this.instance.updateValidationCount();
+        } else {
+            console.warn('[FormValidator] Instance not found. Please initialize first.');
+        }
+    }
+
+    /**
+     * 必須項目をすべて一括でバリデーション、必須項目以外でも入力があれば対象のバリデーションを実行
+     */
+    static async check(): Promise<void> {
+        if (this.instance) {
+            await this.instance.validateAllFields();
+        } else {
+            console.warn('[FormValidator] Instance not found. Please initialize first.');
+        }
+    }
+
 }
 
 // window オブジェクトに追加（ブラウザ環境の場合）
