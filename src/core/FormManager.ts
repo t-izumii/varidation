@@ -231,6 +231,26 @@ export class FormManager {
         const value = field.value;
         this.log(`Validating field: ${fieldId} with value:`, value);
         
+        // 除外エリア内のフィールドはバリデーションをスキップ
+        if (this.fieldStates.isFieldInHiddenArea && this.fieldStates.isFieldInHiddenArea(fieldId)) {
+            this.log(`Skipping validation for field in hidden area: ${fieldId}`);
+            
+            // 除外エリア内のフィールドは常に有効として扱う
+            this.fieldStates.updateField(fieldId, {
+                value,
+                isValid: true,
+                errors: [],
+                isDirty: true
+            });
+            
+            // エラー表示をクリア
+            this.errorDisplay.clearField(fieldId);
+            
+            // カウントを更新
+            this.updateCount();
+            return;
+        }
+        
         try {
             const result = await this.validationEngine.validateField(field, value, this.options.customMessages);
             this.log(`Validation result for ${fieldId}:`, result);
@@ -275,7 +295,10 @@ export class FormManager {
     private updateCount(): void {
         const validCount = this.fieldStates.getValidRequiredFieldCount();
         const totalCount = this.fieldStates.getTotalRequiredFieldCount();
+        
         this.log(`Count updated - valid: ${validCount}, total: ${totalCount}`);
+        this.log(`Required field IDs:`, this.fieldStates.getRequiredFieldIds());
+        
         this.eventManager.emit(ValidationEvents.COUNT_UPDATED, {
             valid: validCount,
             total: totalCount,
@@ -284,7 +307,9 @@ export class FormManager {
         // 追加: ボタンの活性/非活性制御
         if (this.submitButton && this.options.disableSubmitUntilValid) {
             // 必須項目がすべて有効かつ全フィールドにエラーがない場合のみ有効化
-            this.submitButton.disabled = !(validCount === totalCount && this.fieldStates.isValid);
+            const isFormValid = validCount === totalCount && this.fieldStates.isValid;
+            this.submitButton.disabled = !isFormValid;
+            this.log(`Submit button disabled: ${this.submitButton.disabled}, formValid: ${isFormValid}`);
         }
     }
 
@@ -482,6 +507,75 @@ export class FormManager {
         await this.validateAllFields();
     }
 
+    /**
+     * 公開API: カウントを手動で更新（除外エリアの切り替え時などに使用）
+     */
+    updateValidationCount(): void {
+        this.log('Manual count update triggered');
+        
+        // 除外エリアの状態変更に対応するため、全フィールドの必須状態を再評価
+        this.fieldStates.reevaluateAllFieldsRequiredState();
+        
+        // 除外エリア内のフィールドのエラーをクリア
+        this.clearHiddenAreaErrors();
+        
+        // グループバリデーションの状態も再評価
+        this.reevaluateGroupValidations();
+        
+        this.updateCount();
+    }
+
+    /**
+     * 除外エリア内のフィールドのエラーをクリア
+     */
+    private clearHiddenAreaErrors(): void {
+        const allStates = this.fieldStates.getAllStates();
+        
+        for (const fieldId in allStates) {
+            if (this.fieldStates.isFieldInHiddenArea(fieldId)) {
+                // 除外エリア内のフィールドの状態を有効に更新
+                this.fieldStates.updateField(fieldId, {
+                    isValid: true,
+                    errors: []
+                });
+                
+                // エラー表示をクリア
+                this.errorDisplay.clearField(fieldId);
+                
+                this.log(`Cleared error for hidden field: ${fieldId}`);
+            }
+        }
+    }
+
+    /**
+     * グループバリデーションの状態を再評価
+     */
+    private reevaluateGroupValidations(): void {
+        const groupValidators = [
+            { attr: 'data-check_validate', type: 'checkbox' },
+            { attr: 'data-radio_validate', type: 'radio' },
+            { attr: 'data-select_validate', type: 'select' }
+        ];
+        
+        groupValidators.forEach(({ attr, type }) => {
+            const groupNodes = this.form.querySelectorAll(`[${attr}]`);
+            groupNodes.forEach((groupNode, idx) => {
+                const groupId = groupNode.getAttribute('name') || groupNode.getAttribute('id') || `${type}_group_${idx}`;
+                
+                // グループの子要素を取得
+                let fields: NodeListOf<Element>;
+                if (type === 'select') {
+                    fields = groupNode.querySelectorAll('select');
+                } else {
+                    fields = groupNode.querySelectorAll(`input[type=${type}]`);
+                }
+                
+                // グループバリデーションを再実行
+                this.validateGroupField(groupNode as HTMLElement, fields, groupId, attr, false);
+            });
+        });
+    }
+
     // グループバリデーションのセットアップ
     private setupGroupValidation(
         groupNode: HTMLElement,
@@ -493,8 +587,18 @@ export class FormManager {
         if (!groupNode.getAttribute('name') && !groupNode.getAttribute('id')) {
             groupNode.setAttribute('id', groupId);
         }
-        // 初期化
-        this.fieldStates.initializeField(groupId, groupNode as any, { isTouched: false });
+        
+        // 除外エリア内のグループかチェック
+        const isInHiddenArea = this.fieldStates.isFieldInHiddenArea(groupId);
+        
+        this.log(`Setting up group validation for ${groupId}, isInHiddenArea: ${isInHiddenArea}`);
+        
+        // 初期化（除外エリア内の場合は有効な状態で初期化）
+        this.fieldStates.initializeField(groupId, groupNode as any, { 
+            isTouched: false,
+            isValid: isInHiddenArea,  // 除外エリア内は最初から有効
+            errors: []
+        });
 
         // 各子要素にイベントリスナー
         fields.forEach(field => {
@@ -515,6 +619,25 @@ export class FormManager {
         attr: string,
         isUserAction: boolean = false
     ) {
+        // 除外エリア内のグループはバリデーションをスキップ
+        if (this.fieldStates.isFieldInHiddenArea(groupId)) {
+            this.log(`Skipping group validation for hidden area: ${groupId}`);
+            
+            // 除外エリア内のグループは常に有効として扱う
+            this.fieldStates.updateField(groupId, {
+                isValid: true,
+                errors: [],
+                isTouched: isUserAction
+            });
+            
+            // エラー表示をクリア
+            this.errorDisplay.clearField(groupId);
+            
+            // カウント更新
+            this.updateCount();
+            return;
+        }
+        
         const validateRules = groupNode.getAttribute(attr);
         let isValid = false;
         let errorMsg = '';

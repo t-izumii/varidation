@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>除外エリア機能テスト</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        h1 {
+            color: #333;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+        }
+        
+        form {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .form-item {
+            margin-bottom: 25px;
+        }
+        
+        .form-key {
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #555;
+        }
+        
+        .form-val {
+            position: relative;
+        }
+        
+        input[type="text"],
+        input[type="email"],
+        input[type="tel"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+            box-sizing: border-box;
+        }
+        
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #007bff;
+        }
+        
+        .error-text {
+            color: #dc3545;
+            font-size: 14px;
+            margin-top: 5px;
+            display: block;
+            min-height: 20px;
+        }
+        
+        input.error,
+        textarea.error,
+        select.error {
+            border: 1px solid #dc3545;
+            background-color: #fff5f5;
+        }
+        
+        .required {
+            color: #dc3545;
+            font-size: 12px;
+            margin-left: 4px;
+        }
+        
+        button[type="submit"] {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-top: 20px;
+        }
+        
+        button:hover:not(:disabled) {
+            opacity: 0.9;
+        }
+        
+        button[type="submit"]:disabled {
+            background-color: #6c757d;
+            opacity: 0.65;
+            cursor: not-allowed;
+        }
+        
+        .section-title {
+            background-color: #f8f9fa;
+            padding: 10px;
+            margin: 30px -30px 15px -30px;
+            font-weight: bold;
+            color: #495057;
+            border-left: 4px solid #007bff;
+        }
+        
+        .count-display {
+            background: #e9ecef;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            font-weight: bold;
+            color: #495057;
+        }
+        
+        /* 除外エリアのスタイル */
+        .hidden-area {
+            background: #f8f9fa;
+            border: 2px dashed #6c757d;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            position: relative;
+        }
+        
+        .hidden-area::before {
+            content: "除外エリア (data-validate-hidden)";
+            position: absolute;
+            top: -12px;
+            left: 10px;
+            background: #6c757d;
+            color: white;
+            padding: 4px 8px;
+            font-size: 12px;
+            border-radius: 4px;
+        }
+        
+        .hidden-area.hidden {
+            opacity: 0.6;
+        }
+        
+        .toggle-button {
+            background-color: #6c757d;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+        
+        .toggle-button:hover {
+            background-color: #5a6268;
+        }
+        
+        .checkbox-group,
+        .radio-group {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+        
+        .checkbox-item,
+        .radio-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        input[type="checkbox"],
+        input[type="radio"] {
+            width: auto;
+            margin: 0;
+        }
+        
+        label {
+            cursor: pointer;
+            user-select: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>除外エリア機能テスト</h1>
+    
+    <div class="count-display">
+        あと<span data-count_validate="true">0</span>項目入力してください。
+    </div>
+    
+    <form id="testForm">
+        <!-- 通常の必須フィールド -->
+        <div class="section-title">通常の必須フィールド</div>
+        
+        <div class="form-item">
+            <div class="form-key">名前<span class="required">(必須)</span></div>
+            <div class="form-val">
+                <input type="text" name="name" data-validate="required" value="">
+                <p class="error-text" data-text="error"></p>
+            </div>
+        </div>
+        
+        <div class="form-item">
+            <div class="form-key">メールアドレス<span class="required">(必須)</span></div>
+            <div class="form-val">
+                <input type="email" name="email" data-validate="required,email">
+                <p class="error-text" data-text="error"></p>
+            </div>
+        </div>
+        
+        <!-- 除外エリアの切り替えボタン -->
+        <button type="button" class="toggle-button" onclick="toggleHiddenArea()">
+            除外エリアの表示/非表示を切り替え
+        </button>
+        
+        <!-- 除外エリア1 -->
+        <div class="hidden-area" id="hiddenArea1" data-validate-hidden>
+            <div class="section-title">除外エリア内の必須フィールド</div>
+            
+            <div class="form-item">
+                <div class="form-key">会社名<span class="required">(必須だが除外される)</span></div>
+                <div class="form-val">
+                    <input type="text" name="company" data-validate="required">
+                    <p class="error-text" data-text="error"></p>
+                </div>
+            </div>
+            
+            <div class="form-item">
+                <div class="form-key">部署名<span class="required">(必須だが除外される)</span></div>
+                <div class="form-val">
+                    <input type="text" name="department" data-validate="required">
+                    <p class="error-text" data-text="error"></p>
+                </div>
+            </div>
+            
+            <!-- 除外エリア内のグループバリデーション -->
+            <div class="form-item">
+                <div class="form-key">連絡方法<span class="required">(必須だが除外される)</span></div>
+                <div class="form-val" data-check_validate="required">
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="contact1" name="contact_methods[]" value="email">
+                            <label for="contact1">メール</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="contact2" name="contact_methods[]" value="phone">
+                            <label for="contact2">電話</label>
+                        </div>
+                    </div>
+                </div>
+                <p class="error-text" data-text="error"></p>
+            </div>
+        </div>
+        
+        <!-- 通常の任意フィールド -->
+        <div class="section-title">任意フィールド</div>
+        
+        <div class="form-item">
+            <div class="form-key">電話番号（任意）</div>
+            <div class="form-val">
+                <input type="tel" name="phone" data-validate="tel">
+                <p class="error-text" data-text="error"></p>
+            </div>
+        </div>
+        
+        <!-- 個別フィールドに除外属性をつけた例 -->
+        <div class="form-item">
+            <div class="form-key">住所<span class="required">(必須だが個別に除外される)</span></div>
+            <div class="form-val">
+                <input type="text" name="address" data-validate="required" data-validate-hidden>
+                <p class="error-text" data-text="error"></p>
+            </div>
+        </div>
+        
+        <!-- 除外エリア2（ネスト構造のテスト） -->
+        <div class="hidden-area" data-validate-hidden>
+            <div class="section-title">ネスト構造の除外エリア</div>
+            
+            <div class="form-item">
+                <div class="form-key">プロジェクト名<span class="required">(必須だが除外される)</span></div>
+                <div class="form-val">
+                    <input type="text" name="project" data-validate="required">
+                    <p class="error-text" data-text="error"></p>
+                </div>
+            </div>
+            
+            <div class="form-item">
+                <div class="form-key">優先度<span class="required">(必須だが除外される)</span></div>
+                <div class="form-val" data-radio_validate="required">
+                    <div class="radio-group">
+                        <div class="radio-item">
+                            <input type="radio" id="priority1" name="priority" value="high">
+                            <label for="priority1">高</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" id="priority2" name="priority" value="medium">
+                            <label for="priority2">中</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" id="priority3" name="priority" value="low">
+                            <label for="priority3">低</label>
+                        </div>
+                    </div>
+                </div>
+                <p class="error-text" data-text="error"></p>
+            </div>
+        </div>
+        
+        <!-- 最終的な必須項目 -->
+        <div class="section-title">同意項目</div>
+        
+        <div class="form-item">
+            <div class="form-val" data-check_validate="required,agree">
+                <div class="checkbox-item">
+                    <input type="checkbox" id="agree" name="agreement" value="agree">
+                    <label for="agree">利用規約に同意する<span class="required">(必須)</span></label>
+                </div>
+            </div>
+            <p class="error-text" data-text="error"></p>
+        </div>
+        
+        <button type="submit" data-submit="submit">送信</button>
+    </form>
+
+    <script src="../dist/FormValidator.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // FormValidatorを初期化
+            const formManager = FormValidator.init({
+                customMessages: {
+                    // カスタムメッセージがあれば追加
+                },
+                count: true,
+                disableSubmitUntilValid: true,
+                debug: true // デバッグモードを有効にする
+            });
+            
+            // フォーム送信イベント
+            const form = document.getElementById('testForm');
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                alert('フォーム送信完了！');
+            });
+            
+            // デバッグ情報をコンソールに表示
+            console.log('FormManager インスタンス:', formManager);
+            console.log('updateValidationCount method exists:', typeof formManager.updateValidationCount);
+            console.log('初期デバッグ情報:', formManager.getDebugInfo());
+            
+            // エラーテスト用のボタンを追加
+            const errorTestButton = document.createElement('button');
+            errorTestButton.type = 'button';
+            errorTestButton.textContent = '全フィールドのバリデーションを実行';
+            errorTestButton.className = 'toggle-button';
+            errorTestButton.style.marginLeft = '10px';
+            errorTestButton.onclick = function() {
+                formManager.validate();
+            };
+            
+            const toggleButton = document.querySelector('.toggle-button');
+            toggleButton.parentNode.insertBefore(errorTestButton, toggleButton.nextSibling);
+            
+            // 初期カウントを設定（遅延実行）
+            setTimeout(() => {
+                if (typeof window.manualUpdateCount === 'function') {
+                    window.manualUpdateCount();
+                    console.log('初期カウントを設定しました');
+                }
+            }, 500);
+            
+            // グローバル関数として公開
+            window.manualUpdateCount = function() {
+                console.log('Manual count update function called');
+                const countElement = document.querySelector('[data-count_validate]');
+                if (countElement) {
+                    // 必須フィールドの特定とカウント
+                    let totalRequired = 0;
+                    let validCount = 0;
+                    
+                    // 1. 通常の必須フィールドをチェック
+                    const regularFields = document.querySelectorAll('input[data-validate*="required"], input[required], textarea[data-validate*="required"], textarea[required], select[data-validate*="required"], select[required]');
+                    regularFields.forEach(field => {
+                        if (!isFieldInHiddenArea(field)) {
+                            totalRequired++;
+                            if (field.type === 'checkbox' || field.type === 'radio') {
+                                // チェックボックス・ラジオボタンは個別に処理
+                                if (field.checked) {
+                                    validCount++;
+                                }
+                            } else if (field.value && field.value.trim()) {
+                                validCount++;
+                            }
+                        }
+                    });
+                    
+                    // 2. グループバリデーションのフィールドをチェック
+                    const groupFields = document.querySelectorAll('[data-check_validate*="required"], [data-radio_validate*="required"], [data-select_validate*="required"]');
+                    groupFields.forEach(groupElement => {
+                        if (!isFieldInHiddenArea(groupElement)) {
+                            totalRequired++;
+                            
+                            // グループ内のフィールドをチェック
+                            const groupInputs = groupElement.querySelectorAll('input[type="checkbox"], input[type="radio"], select');
+                            let hasValidInput = false;
+                            
+                            groupInputs.forEach(input => {
+                                if (input.type === 'checkbox' || input.type === 'radio') {
+                                    if (input.checked) {
+                                        hasValidInput = true;
+                                    }
+                                } else if (input.value && input.value.trim()) {
+                                    hasValidInput = true;
+                                }
+                            });
+                            
+                            if (hasValidInput) {
+                                validCount++;
+                            }
+                        }
+                    });
+                    
+                    const remaining = totalRequired - validCount;
+                    countElement.textContent = remaining.toString();
+                    console.log(`Manual count update - total: ${totalRequired}, valid: ${validCount}, remaining: ${remaining}`);
+                    
+                    return { total: totalRequired, valid: validCount, remaining: remaining };
+                }
+                return null;
+            };
+            
+            // ヘルパー関数: フィールドが除外エリア内かどうかをチェック
+            function isFieldInHiddenArea(element) {
+                // 要素自身に除外属性があるかチェック
+                if (element.hasAttribute('data-validate-hidden')) {
+                    return true;
+                }
+                
+                // 親要素を遡って除外属性を持つ要素を探す
+                let parent = element.parentElement;
+                while (parent && parent !== document.body) {
+                    if (parent.hasAttribute('data-validate-hidden')) {
+                        return true;
+                    }
+                    parent = parent.parentElement;
+                }
+                
+                return false;
+            }
+        });
+        
+        // 除外エリアの表示/非表示を切り替える関数
+        function toggleHiddenArea() {
+            const hiddenArea = document.getElementById('hiddenArea1');
+            const isHidden = hiddenArea.hasAttribute('data-validate-hidden');
+            
+            console.log('--- 除外エリア切り替え開始 ---');
+            console.log('切り替え前の状態 - isHidden:', isHidden);
+            
+            // 切り替え前のカウントを表示
+            if (typeof window.manualUpdateCount === 'function') {
+                const beforeCount = window.manualUpdateCount();
+                console.log('切り替え前のカウント:', beforeCount);
+            }
+            
+            if (isHidden) {
+                // 除外属性を削除（バリデーション対象に含める）
+                hiddenArea.removeAttribute('data-validate-hidden');
+                hiddenArea.classList.remove('hidden');
+                console.log('除外エリアをバリデーション対象に含めました');
+            } else {
+                // 除外属性を追加（バリデーション対象から除外）
+                hiddenArea.setAttribute('data-validate-hidden', '');
+                hiddenArea.classList.add('hidden');
+                console.log('除外エリアをバリデーション対象から除外しました');
+            }
+            
+            // カウントを手動で更新
+            const formManager = FormValidator.getInstance();
+            if (formManager) {
+                console.log('切り替え前のデバッグ情報:', formManager.getDebugInfo());
+                
+                // updateValidationCountメソッドが存在しない場合の代替手段
+                if (typeof formManager.updateValidationCount === 'function') {
+                    formManager.updateValidationCount();
+                    console.log('FormManager.updateValidationCount() を実行しました');
+                } else {
+                    console.warn('updateValidationCount method not found, using manual update');
+                    // グローバル関数を使用
+                    if (typeof window.manualUpdateCount === 'function') {
+                        const afterCount = window.manualUpdateCount();
+                        console.log('手動カウント更新完了:', afterCount);
+                    }
+                }
+                
+                // 少し遅延させてからデバッグ情報を表示
+                setTimeout(() => {
+                    console.log('切り替え後のデバッグ情報:', formManager.getDebugInfo());
+                    
+                    // 最終確認のカウント
+                    if (typeof window.manualUpdateCount === 'function') {
+                        const finalCount = window.manualUpdateCount();
+                        console.log('最終カウント:', finalCount);
+                    }
+                    
+                    console.log('--- 除外エリア切り替え終了 ---');
+                }, 200);
+            }
+        }
+    </script>
+</body>
+</html>

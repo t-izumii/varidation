@@ -16,14 +16,18 @@ export class FieldStateManager {
      * フィールドを初期化
      */
     initializeField(fieldId: string, element: HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement, initial?: Partial<FieldState>): void {
-        // 必須判定
-        const isRequired =
+        // 除外エリア内のフィールドかチェック
+        const isInHiddenArea = this.checkFieldInHiddenArea(fieldId);
+        
+        // 必須判定（除外エリア内の場合はrequiredを無視）
+        const isRequired = !isInHiddenArea && (
             element.hasAttribute('required') ||
-            (element.dataset.validate && element.dataset.validate.split(',').map(v => v.trim()).includes('required'));
+            (element.dataset.validate && element.dataset.validate.split(',').map(v => v.trim()).includes('required'))
+        );
 
-        // 初期値が空なら isValid: false
+        // 初期値が空なら isValid: false（ただし除外エリア内は常にtrue）
         const initialValue = element.value || '';
-        const isValid = isRequired ? !!initialValue.trim() : true;
+        const isValid = isInHiddenArea || !isRequired || !!initialValue.trim();
 
         const initialState: FieldState = {
             value: initialValue,
@@ -86,10 +90,15 @@ export class FieldStateManager {
     }
 
     /**
-     * フォーム全体が有効かどうか
+     * フォーム全体が有効かどうか（除外エリアのフィールドは除く）
      */
     get isValid(): boolean {
-        for (const state of this.fields.values()) {
+        for (const [fieldId, state] of this.fields) {
+            // 除外エリア内のフィールドはスキップ
+            if (this.checkFieldInHiddenArea(fieldId)) {
+                continue;
+            }
+            
             if (!state.isValid) {
                 return false;
             }
@@ -139,10 +148,107 @@ export class FieldStateManager {
         this.fields.clear();
     }
 
-    // 必須フィールドのIDリストを返す（グループバリデーションも含む）
+    /**
+     * 除外エリア内のフィールドかどうかをチェック（公開API）
+     */
+    isFieldInHiddenArea(fieldId: string): boolean {
+        return this.checkFieldInHiddenArea(fieldId);
+    }
+
+    /**
+     * 除外エリア内のフィールドかどうかをチェック（内部メソッド）
+     */
+    private checkFieldInHiddenArea(fieldId: string): boolean {
+        const element = document.querySelector(`[name='${fieldId}'], [id='${fieldId}']`);
+        if (!element) return false;
+        
+        // 要素自身に data-validate-hidden があるかチェック
+        if (element.hasAttribute('data-validate-hidden')) {
+            return true;
+        }
+        
+        // 親要素を逆方向に探索して data-validate-hidden を持つ要素を探す
+        let parent = element.parentElement;
+        while (parent) {
+            if (parent.hasAttribute('data-validate-hidden')) {
+                return true;
+            }
+            parent = parent.parentElement;
+        }
+        
+        return false;
+    }
+
+    /**
+     * 除外エリアの状態が変更された時にフィールドの必須状態を再評価
+     */
+    reevaluateFieldRequiredState(fieldId: string): void {
+        const element = document.querySelector(`[name='${fieldId}'], [id='${fieldId}']`);
+        if (!element || !(element instanceof HTMLInputElement || element instanceof HTMLSelectElement || element instanceof HTMLTextAreaElement)) {
+            return;
+        }
+        
+        const currentState = this.fields.get(fieldId);
+        if (!currentState) {
+            return;
+        }
+        
+        // 除外エリア内かチェック
+        const isInHiddenArea = this.checkFieldInHiddenArea(fieldId);
+        
+        // 必須判定（除外エリア内の場合はrequiredを無視）
+        const isRequired = !isInHiddenArea && (
+            element.hasAttribute('required') ||
+            (element.dataset.validate && element.dataset.validate.split(',').map(v => v.trim()).includes('required'))
+        );
+        
+        // 除外エリア内の場合は常に有効、そうでなければ値をチェック
+        let isValid: boolean;
+        if (isInHiddenArea) {
+            isValid = true;
+        } else if (!isRequired) {
+            isValid = true;
+        } else {
+            // 必須フィールドの場合、値があるかチェック
+            const value = element.value || '';
+            isValid = !!value.trim();
+        }
+        
+        // 状態を更新
+        this.fields.set(fieldId, {
+            ...currentState,
+            isValid: isValid,
+            errors: isValid ? [] : currentState.errors
+        });
+        
+        if (typeof console !== 'undefined' && console.log) {
+            console.log(`[FieldStateManager] Reevaluated field ${fieldId}: isInHiddenArea=${isInHiddenArea}, isRequired=${isRequired}, isValid=${isValid}`);
+        }
+    }
+
+    /**
+     * 全フィールドの必須状態を再評価
+     */
+    reevaluateAllFieldsRequiredState(): void {
+        for (const fieldId of this.fields.keys()) {
+            this.reevaluateFieldRequiredState(fieldId);
+        }
+    }
+
+    // 必須フィールドのIDリストを返す（グループバリデーションも含む、除外エリアは除く）
     getRequiredFieldIds(): string[] {
         const required: string[] = [];
+        const excluded: string[] = [];
+        
         for (const [fieldId, state] of this.fields) {
+            // 除外エリア内のフィールドかチェック
+            const isInHiddenArea = this.checkFieldInHiddenArea(fieldId);
+            
+            if (isInHiddenArea) {
+                excluded.push(fieldId);
+                continue;
+            }
+            
             const el = document.querySelector(`[name='${fieldId}'], [id='${fieldId}']`);
             if (el instanceof HTMLInputElement || el instanceof HTMLSelectElement || el instanceof HTMLTextAreaElement) {
                 // 通常の必須判定
@@ -166,6 +272,13 @@ export class FieldStateManager {
                 }
             }
         }
+        
+        // デバッグログを追加
+        if (typeof console !== 'undefined' && console.log) {
+            console.log('[FieldStateManager] Required fields:', required);
+            console.log('[FieldStateManager] Excluded fields:', excluded);
+        }
+        
         return required;
     }
 
