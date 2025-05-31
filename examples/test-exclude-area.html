@@ -236,7 +236,7 @@
             <div class="form-item">
                 <div class="form-key">会社名<span class="required">(必須だが除外される)</span></div>
                 <div class="form-val">
-                    <input type="text" name="company" data-validate="required">
+                    <input type="text" name="company" data-validate="required,emesse1">
                     <p class="error-text" data-text="error"></p>
                 </div>
             </div>
@@ -345,6 +345,7 @@
             const formManager = FormValidator.init({
                 customMessages: {
                     // カスタムメッセージがあれば追加
+                    emesse1: 'これはテストメッセージです。'
                 },
                 count: true,
                 disableSubmitUntilValid: true,
@@ -357,25 +358,6 @@
                 e.preventDefault();
                 alert('フォーム送信完了！');
             });
-            
-            // エラーテスト用のボタンを追加
-            // const errorTestButton = document.createElement('button');
-            // errorTestButton.type = 'button';
-            // errorTestButton.textContent = '全フィールドのバリデーションを実行';
-            // errorTestButton.className = 'toggle-button';
-            // errorTestButton.style.marginLeft = '10px';
-            // errorTestButton.onclick = function() {
-            //     FormValidator.check();
-            // };
-
-            // const updateTestButton = document.createElement('button');
-            // updateTestButton.type = 'button';
-            // updateTestButton.textContent = 'カウント更新テスト';
-            // updateTestButton.className = 'toggle-button';
-            // updateTestButton.style.marginLeft = '10px';
-            // updateTestButton.onclick = function() {
-            //     FormValidator.update();
-            // };
             
             const toggleButton = document.querySelector('.toggle-button');
             toggleButton.parentNode.insertBefore(errorTestButton, toggleButton.nextSibling);

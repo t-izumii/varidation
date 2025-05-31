@@ -543,8 +543,8 @@ export class FormManager {
 
         await Promise.all(promises);
 
-        // グループバリデーションも再実行
-        this.reevaluateGroupValidations();
+        // グループバリデーションも再実行（エラー表示を強制的に行う）
+        this.validateAllGroupFields();
 
         // フォーム全体のバリデーション結果を発火
         this.eventManager.emit(ValidationEvents.FORM_VALIDATED, {
@@ -629,7 +629,36 @@ export class FormManager {
     }
 
     /**
-     * グループバリデーションの状態を再評価
+     * 全グループフィールドをバリデーション（エラー表示を強制的に行う）
+     */
+    private validateAllGroupFields(): void {
+        const groupValidators = [
+            { attr: 'data-check_validate', type: 'checkbox' },
+            { attr: 'data-radio_validate', type: 'radio' },
+            { attr: 'data-select_validate', type: 'select' }
+        ];
+        
+        groupValidators.forEach(({ attr, type }) => {
+            const groupNodes = this.form.querySelectorAll(`[${attr}]`);
+            groupNodes.forEach((groupNode, idx) => {
+                const groupId = groupNode.getAttribute('name') || groupNode.getAttribute('id') || `${type}_group_${idx}`;
+                
+                // グループの子要素を取得
+                let fields: NodeListOf<Element>;
+                if (type === 'select') {
+                    fields = groupNode.querySelectorAll('select');
+                } else {
+                    fields = groupNode.querySelectorAll(`input[type=${type}]`);
+                }
+                
+                // グループバリデーションを実行（isTouchedをtrueに設定してエラー表示を強制）
+                this.validateGroupField(groupNode as HTMLElement, fields, groupId, attr, true);
+            });
+        });
+    }
+
+    /**
+     * グループバリデーションの状態を再評価（エラー表示はしない）
      */
     private reevaluateGroupValidations(): void {
         const groupValidators = [
