@@ -327,7 +327,7 @@ export class FormManager {
         this.log('Setting up form event listeners');
         
         // フォーム送信
-        DOMHelper.addEventListener(this.form, 'submit', (event) => {
+        const submitCleanup = DOMHelper.addEventListener(this.form, 'submit', (event) => {
             this.log('Form submit event triggered, isValid:', this.isValid);
             if (!this.isValid) {
                 event.preventDefault();
@@ -337,7 +337,7 @@ export class FormManager {
         });
 
         // フォームリセット
-        DOMHelper.addEventListener(this.form, 'reset', () => {
+        const resetCleanup = DOMHelper.addEventListener(this.form, 'reset', () => {
             this.log('Form reset event triggered');
             this.reset();
         });

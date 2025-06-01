@@ -1,5 +1,5 @@
 {
-  "name": "@your-org/varidation-pro",
+  "name": "@your-org/varidation",
   "version": "1.0.0",
   "main": "dist/index.js",
   "module": "dist/index.js",
@@ -309,8 +309,8 @@
     "dev": "webpack --config webpack.dev.js --watch",
     "test": "jest --coverage"
   },
-  "keywords": [],
+  "keywords": ["form", "validation", "javascript", "typescript", "accessibility", "japanese", "commercial", "forms", "web"],
   "author": "Your Name <your.email@example.com>",
   "license": "SEE LICENSE IN LICENSE",
-  "description": "Professional form validation library for Japanese web applications with accessibility support",
+  "description": "Commercial form validation library for Japanese web applications with accessibility support - ¥980 per domain"
 }

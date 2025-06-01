@@ -1,44 +1,252 @@
 VARIDATION COMMERCIAL LICENSE
 
 Copyright (c) 2024 [あなたの名前または会社名]
-
 All rights reserved.
 
-IMPORTANT: This software requires a valid license for commercial use.
+## ライセンス概要
 
-## License Types
+Varidationは、Webフォームバリデーション機能を提供する商用JavaScriptライブラリです。
+商用利用には有料ライセンスの購入が必要です。
 
-### 1. Community Edition (Free)
-- Personal and non-commercial projects only
-- Basic validation features
-- MIT License terms apply
-- Source: https://github.com/[your-username]/varidation-community
+## ライセンス料金
 
-### 2. Professional Edition (Commercial)
-- Commercial projects allowed
-- Full feature set including:
-  - Advanced accessibility features
-  - Async validation
-  - Exclusion areas
-  - Premium support
-- Price: $199/year per domain
-- Contact: license@[your-domain].com
+### 基本料金
+- **1ドメインあたり**: ¥980（税込・買い切り）
+- **追加ドメイン**: ¥980（同価格）
+- **開発環境**: 無料（制限なし）
 
-### 3. Enterprise Edition
-- Unlimited domains
-- Custom development
-- Priority support
-- SLA guarantees
-- Price: Contact for quote
-- Contact: enterprise@[your-domain].com
+### 価格表
+| ドメイン数 | 単価 | 累計金額 |
+|-----------|------|----------|
+| 1個目 | ¥980 | ¥980 |
+| 2個目 | ¥980 | ¥1,960 |
+| 3個目 | ¥980 | ¥2,940 |
+| 4個目 | ¥980 | ¥3,920 |
+| 5個目 | ¥980 | ¥4,900 |
+| 6個目以降 | ¥980/個 | - |
 
-## Terms
+## ライセンス対象範囲
 
-By using this software in a commercial project, you agree to obtain 
-a valid commercial license. Unauthorized commercial use is prohibited.
+### ✅ 1ライセンスで利用可能
+```
+example.com
+www.example.com
+app.example.com
+api.example.com
+admin.example.com
+blog.example.com
+shop.example.com
+```
+※ 同一ドメインの全サブドメインが含まれます
 
-For licensing inquiries: license@[your-domain].com
-For more information: https://[your-domain].com/license
+### ✅ 開発環境（常に無料）
+```
+localhost
+127.0.0.1
+*.local
+*dev*
+*staging*
+*test*
+社内IP（192.168.*, 10.*, etc）
+```
+※ 開発・テスト環境は制限なく無料で利用可能
 
-UNAUTHORIZED USE OF THIS SOFTWARE IN COMMERCIAL PROJECTS 
-IS STRICTLY PROHIBITED AND MAY RESULT IN LEGAL ACTION.
+### ❌ 別ライセンス必要
+```
+example.com （1個目: ¥980）
+another-site.com （2個目: ¥980）
+third-domain.jp （3個目: ¥980）
+```
+
+## ライセンス内容
+
+### 許可される利用
+- ✅ 商用サイトでの利用
+- ✅ 企業サイトでの利用
+- ✅ ECサイト・SaaSでの利用
+- ✅ クライアントワークでの利用
+- ✅ ソースコード改変
+- ✅ 無期限利用
+- ✅ 開発環境での無制限利用
+
+### 提供される権利
+1. **使用権**: 購入ドメインでの永続利用権
+2. **改変権**: 必要に応じたカスタマイズ
+3. **統合権**: 他システムとの統合
+4. **サポート権**: 1年間のメールサポート
+
+### 制限事項
+- ❌ 再配布・転売禁止
+- ❌ 複数ドメインでの共有利用禁止
+- ❌ 著作権表記の削除禁止
+- ❌ 競合製品開発への利用禁止
+
+## 利用例
+
+### 一般的な利用ケース
+
+**ケース1: 企業サイト**
+```
+https://company.co.jp
+https://www.company.co.jp
+https://recruit.company.co.jp
+→ 1ライセンス（¥980）で全て利用可能
+```
+
+**ケース2: 複数サービス運営**
+```
+https://service-a.com （¥980）
+https://service-b.com （¥980）
+https://service-c.jp （¥980）
+→ 合計 ¥2,940
+```
+
+**ケース3: 制作会社**
+```
+クライアントA: client-a.com （¥980）
+クライアントB: client-b.net （¥980）
+クライアントC: client-c.jp （¥980）
+→ クライアントごとに個別ライセンス必要
+```
+
+## 開発環境の取り扱い
+
+### 無料で利用可能な環境
+- ローカル開発環境
+- 社内テストサーバー
+- ステージング環境
+- CI/CDパイプライン
+- 社内デモサイト
+
+### 開発環境の定義
+以下のパターンは自動的に開発環境と判定され、無料で利用できます：
+
+```javascript
+// 自動判定される開発環境
+const isDevelopment = () => {
+    const hostname = window.location.hostname;
+    return hostname === 'localhost' ||
+           hostname === '127.0.0.1' ||
+           hostname.endsWith('.local') ||
+           hostname.includes('dev') ||
+           hostname.includes('staging') ||
+           hostname.includes('test') ||
+           /^192\.168\./.test(hostname) ||
+           /^10\./.test(hostname) ||
+           /^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(hostname);
+};
+```
+
+## 購入・利用開始方法
+
+### Step 1: ライセンス購入
+1. **購入サイト**: https://[your-domain].com/buy
+2. **必要情報**: 利用予定ドメイン名
+3. **支払い方法**: クレジットカード、PayPal、銀行振込
+4. **料金**: ¥980/ドメイン
+
+### Step 2: ファイル取得
+- 決済完了後、商用版ダウンロードリンクをメール送付
+- ライセンス証明書もあわせて送付
+
+### Step 3: 実装
+```html
+<!-- 商用版の利用 -->
+<script src="path/to/FormValidator-commercial.min.js"></script>
+<script>
+FormValidator.init({
+    // 通常の設定
+});
+</script>
+```
+
+## サポート内容
+
+### 1年間メールサポート
+- **窓口**: support@[your-domain].com
+- **対応時間**: 平日 9:00-18:00
+- **回答時間**: 48時間以内（営業日）
+- **対応範囲**:
+  - 実装方法の質問
+  - バグレポート対応
+  - カスタマイズ相談
+  - 技術的な問題解決
+
+### サポート対象外
+- カスタム開発の代行
+- 第三者ライブラリとの競合問題
+- サーバー設定に関する質問
+- ライセンス範囲外での利用相談
+
+## よくある質問
+
+### Q: 開発中はライセンス不要ですか？
+**A**: はい。localhost、社内IP、*.dev、*staging*などの開発環境では無料でご利用いただけます。
+
+### Q: サブドメインごとにライセンスが必要ですか？
+**A**: いいえ。1つのドメインライセンスで全サブドメイン（app.example.com、api.example.comなど）をカバーします。
+
+### Q: クライアントワークでの利用は？
+**A**: クライアントのドメインごとに個別ライセンスが必要です。制作費に含めることができます。
+
+### Q: 年間利用料はかかりますか？
+**A**: いいえ。買い切りです。一度購入すれば永続的にご利用いただけます。
+
+### Q: ソースコードの改変は可能ですか？
+**A**: はい。購入いただいたドメインでの利用に限り、自由に改変できます。
+
+### Q: CDNでの利用は可能ですか？
+**A**: 商用版はセルフホスティングのみです。CDNでの配布は行っておりません。
+
+### Q: 返金保証はありますか？
+**A**: 購入から30日以内であれば理由を問わず全額返金いたします。
+
+## 禁止事項
+
+### 再配布関連
+- ❌ ファイルの配布・共有
+- ❌ WordPressテーマ・プラグインへの組み込み販売
+- ❌ テンプレート・フレームワークへの組み込み
+- ❌ オープンソースプロジェクトでの配布
+
+### ライセンス違反
+- ❌ 未購入ドメインでの商用利用
+- ❌ ライセンス範囲外での利用
+- ❌ 著作権表記の削除・改変
+- ❌ ライセンス情報の偽装
+
+## 法的事項
+
+### 準拠法・管轄
+- **準拠法**: 日本法
+- **管轄裁判所**: 東京地方裁判所
+
+### 免責事項
+本ソフトウェアは「現状有姿」で提供され、いかなる保証も行いません。利用により生じた損害について、当社は一切責任を負いません。
+
+### 著作権
+Varidationの著作権は[あなたの名前または会社名]に帰属します。
+
+## お問い合わせ
+
+### 購入前相談
+- **Email**: sales@[your-domain].com
+- **営業時間**: 平日 10:00-17:00
+
+### 技術サポート
+- **Email**: support@[your-domain].com  
+- **営業時間**: 平日 9:00-18:00
+
+### ライセンス相談
+- **Email**: license@[your-domain].com
+
+### 購入サイト
+- **URL**: https://[your-domain].com/buy
+
+---
+
+**重要**: 本ライブラリの商用利用には有料ライセンスが必要です。
+適切なライセンスを購入せずに商用利用された場合、法的措置を講じる場合があります。
+
+最終更新: 2024年12月  
+ライセンスバージョン: 2.0
