@@ -1,6 +1,6 @@
 VARIDATION COMMERCIAL LICENSE
 
-Copyright (c) 2024 [あなたの名前または会社名]
+Copyright (c) 2024 [wakuwaku]
 All rights reserved.
 
 ## ライセンス概要
@@ -19,11 +19,6 @@ Varidationは、Webフォームバリデーション機能を提供する商用J
 | ドメイン数 | 単価 | 累計金額 |
 |-----------|------|----------|
 | 1個目 | ¥980 | ¥980 |
-| 2個目 | ¥980 | ¥1,960 |
-| 3個目 | ¥980 | ¥2,940 |
-| 4個目 | ¥980 | ¥3,920 |
-| 5個目 | ¥980 | ¥4,900 |
-| 6個目以降 | ¥980/個 | - |
 
 ## ライセンス対象範囲
 
@@ -199,7 +194,7 @@ FormValidator.init({
 **A**: 商用版はセルフホスティングのみです。CDNでの配布は行っておりません。
 
 ### Q: 返金保証はありますか？
-**A**: 購入から30日以内であれば理由を問わず全額返金いたします。
+**A**: 購入から7日以内であれば理由を問わず全額返金いたします。
 
 ## 禁止事項
 
@@ -225,20 +220,20 @@ FormValidator.init({
 本ソフトウェアは「現状有姿」で提供され、いかなる保証も行いません。利用により生じた損害について、当社は一切責任を負いません。
 
 ### 著作権
-Varidationの著作権は[あなたの名前または会社名]に帰属します。
+Varidationの著作権は[wakuwaku]に帰属します。
 
 ## お問い合わせ
 
 ### 購入前相談
-- **Email**: sales@[your-domain].com
+- **Email**: creative.wakuwaku@gmail.com
 - **営業時間**: 平日 10:00-17:00
 
 ### 技術サポート
-- **Email**: support@[your-domain].com  
+- **Email**: creative.wakuwaku@gmail.com  
 - **営業時間**: 平日 9:00-18:00
 
 ### ライセンス相談
-- **Email**: license@[your-domain].com
+- **Email**: creative.wakuwaku@gmail.com
 
 ### 購入サイト
 - **URL**: https://[your-domain].com/buy
