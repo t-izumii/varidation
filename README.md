@@ -436,15 +436,6 @@ Varidationは、日本語フォームに特化した軽量で使いやすいバ�
 
 ---
 
-**Varidation** - より良いWebフォーム体験を、すべての開発者に。Delay: 300
-            },
-            disableSubmitUntilValid: true
-        });
-    </script>
-</body>
-</html>
-```
-
 ### 4.2 ES6 モジュール
 ```javascript
 import { FormValidator } from 'varidation';
