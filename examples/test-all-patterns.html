@@ -81,6 +81,10 @@
             border: 1px solid #dc3545;
             background-color: #fff5f5;
         }
+        .error select {
+            border: 1px solid #dc3545;
+            background-color: #fff5f5;
+        }
         
         .required {
             color: #dc3545;
@@ -253,7 +257,7 @@
         
         <div class="form-item">
             <div class="form-key">都道府県<span class="required">(必須)</span></div>
-            <div class="form-val" data-select_validate="required,emesse2">
+            <div class="form-val" data-select_validate="required">
                 <select name="prefectures">
                     <option value="">-----</option>
                     <option value="01">北海道</option>
@@ -376,6 +380,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             FormValidator.init({
                 customMessages: {
+                    
                 },
                 count: true,
                 disableSubmitUntilValid: true

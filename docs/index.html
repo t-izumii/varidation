@@ -1,0 +1,1017 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Varidation - 日本語フォームに特化したバリデーションライブラリ</title>
+    <meta name="description" content="日本語フォームに特化した、軽量で使いやすいJavaScriptバリデーションライブラリ。TypeScript対応、除外エリア機能、リアルタイムバリデーションを提供。">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <!-- Varidation Library -->
+    <script src="../dist/FormValidator.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --secondary: #10b981;
+            --accent: #f59e0b;
+            --bg-light: #f8fafc;
+            --bg-white: #ffffff;
+            --text-dark: #1e293b;
+            --text-gray: #64748b;
+            --text-light: #94a3b8;
+            --border: #e2e8f0;
+            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+        }
+
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            line-height: 1.7;
+            color: var(--text-dark);
+            overflow-x: hidden;
+        }
+
+        /* Header */
+        .header {
+            background: var(--bg-white);
+            padding: 1rem 0;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.95);
+        }
+
+        .nav {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .logo::before {
+            content: "✓";
+            background: var(--primary);
+            color: white;
+            width: 2rem;
+            height: 2rem;
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text-gray);
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary);
+        }
+
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 8rem 0 6rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+        }
+
+        .hero-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            position: relative;
+            z-index: 2;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            line-height: 1.2;
+        }
+
+        .hero .subtitle {
+            font-size: 1.25rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .hero-badges {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 3rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 2rem;
+            font-size: 0.9rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .cta-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            font-weight: 500;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            border: 2px solid var(--primary);
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: var(--primary-dark);
+            border-color: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .btn-primary:disabled {
+            background: #6c757d !important;
+            border-color: #6c757d !important;
+            color: #ffffff !important;
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Features Section */
+        .features {
+            padding: 6rem 0;
+            background: var(--bg-light);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+
+        .section-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: var(--text-dark);
+        }
+
+        .section-subtitle {
+            font-size: 1.125rem;
+            color: var(--text-gray);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .feature-card {
+            background: var(--bg-white);
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: var(--shadow);
+            transition: transform 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-4px);
+        }
+
+        .feature-icon {
+            width: 3rem;
+            height: 3rem;
+            border-radius: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .feature-card:nth-child(1) .feature-icon { background: rgba(37, 99, 235, 0.1); color: var(--primary); }
+        .feature-card:nth-child(2) .feature-icon { background: rgba(16, 185, 129, 0.1); color: var(--secondary); }
+        .feature-card:nth-child(3) .feature-icon { background: rgba(245, 158, 11, 0.1); color: var(--accent); }
+        .feature-card:nth-child(4) .feature-icon { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+        .feature-card:nth-child(5) .feature-icon { background: rgba(139, 92, 246, 0.1); color: #8b5cf6; }
+        .feature-card:nth-child(6) .feature-icon { background: rgba(6, 182, 212, 0.1); color: #06b6d4; }
+
+        .feature-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--text-dark);
+        }
+
+        .feature-description {
+            color: var(--text-gray);
+        }
+
+        /* Quick Start Section */
+        .quick-start {
+            padding: 6rem 0;
+            background: var(--bg-white);
+        }
+
+        .code-example {
+            background: #1e293b;
+            border-radius: 1rem;
+            padding: 2rem;
+            margin: 2rem 0;
+            position: relative;
+            overflow-x: auto;
+        }
+
+        .code-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .code-dot {
+            width: 0.75rem;
+            height: 0.75rem;
+            border-radius: 50%;
+        }
+
+        .code-dot:nth-child(1) { background: #ef4444; }
+        .code-dot:nth-child(2) { background: #f59e0b; }
+        .code-dot:nth-child(3) { background: #10b981; }
+
+        .code {
+            font-family: 'JetBrains Mono', monospace;
+            color: #e2e8f0;
+            line-height: 1.6;
+            font-size: 0.9rem;
+        }
+
+        .code .comment { color: #64748b; }
+        .code .string { color: #10b981; }
+        .code .keyword { color: #3b82f6; }
+        .code .function { color: #f59e0b; }
+
+        /* Demo Section */
+        .demo {
+            padding: 6rem 0;
+            background: var(--bg-light);
+        }
+
+        .demo-preview {
+            background: var(--bg-white);
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            margin-top: 2rem;
+        }
+
+        .demo-form {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--text-dark);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid var(--border);
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .form-input.error,
+        .form-input.validation-error {
+            border-color: #ef4444;
+            background-color: #fff5f5;
+        }
+
+        .form-input.success,
+        .form-input.validation-success {
+            border-color: var(--secondary);
+            background-color: #f0fdf4;
+        }
+
+        .error-message {
+            color: #ef4444;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+            display: block;
+            min-height: 20px;
+        }
+        
+        .error-message:empty {
+            display: none;
+        }
+
+        .demo-counter {
+            text-align: center;
+            margin: 1rem 0;
+            color: var(--text-gray);
+        }
+
+        /* Footer */
+        .footer {
+            background: var(--text-dark);
+            color: white;
+            padding: 3rem 0 2rem;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .footer-section h3 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .footer-links {
+            list-style: none;
+        }
+
+        .footer-links li {
+            margin-bottom: 0.5rem;
+        }
+
+        .footer-links a {
+            color: var(--text-light);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            color: white;
+        }
+
+        .footer-bottom {
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 2rem;
+            text-align: center;
+            color: var(--text-light);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .nav {
+                padding: 0 1rem;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .hero .subtitle {
+                font-size: 1.125rem;
+            }
+
+            .container {
+                padding: 0 1rem;
+            }
+
+            .cta-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .btn {
+                width: 100%;
+                max-width: 300px;
+                justify-content: center;
+            }
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-fade-in-up {
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        /* Scroll animations */
+        .feature-card,
+        .code-example,
+        .demo-preview {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.6s ease;
+        }
+
+        .feature-card.visible,
+        .code-example.visible,
+        .demo-preview.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <nav class="nav">
+            <a href="#" class="logo">Varidation</a>
+            <ul class="nav-links">
+                <li><a href="#features">特徴</a></li>
+                <li><a href="#quickstart">クイックスタート</a></li>
+                <li><a href="#demo">デモ</a></li>
+                <li><a href="#docs">ドキュメント</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content animate-fade-in-up">
+            <h1>日本語フォームに特化した<br>バリデーションライブラリ</h1>
+            <p class="subtitle">軽量で使いやすく、TypeScript対応。電話番号、郵便番号、カナ文字など日本語特有の入力形式に完全対応したJavaScriptライブラリです。</p>
+            
+            <div class="hero-badges">
+                <span class="badge">📦 20KB未満</span>
+                <span class="badge">⚡ 依存関係なし</span>
+                <span class="badge">🔧 TypeScript対応</span>
+                <span class="badge">🇯🇵 日本語特化</span>
+            </div>
+
+            <div class="cta-buttons">
+                <a href="#quickstart" class="btn btn-primary">
+                    🚀 すぐに始める
+                </a>
+                <a href="#" class="btn btn-secondary" id="github-link">
+                    📚 GitHub で見る
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features" id="features">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">なぜVaridationを選ぶのか</h2>
+                <p class="section-subtitle">日本語フォーム開発の課題を解決する、モダンなバリデーションライブラリです</p>
+            </div>
+
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🔧</div>
+                    <h3 class="feature-title">TypeScript対応</h3>
+                    <p class="feature-description">完全な型定義付きで、開発時の型安全性を確保。IDEでの補完やエラー検出もバッチリ。</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">🎨</div>
+                    <h3 class="feature-title">除外エリア機能</h3>
+                    <p class="feature-description">動的なフォーム要件に対応。条件に応じてバリデーション対象を切り替える独自機能を搭載。</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">♿</div>
+                    <h3 class="feature-title">アクセシビリティ</h3>
+                    <p class="feature-description">WCAG準拠のアクセシブルなバリデーション。スクリーンリーダーやキーボード操作にも対応。</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">🔄</div>
+                    <h3 class="feature-title">リアルタイム・非同期</h3>
+                    <p class="feature-description">blur/change/inputイベント対応のリアルタイムバリデーション。API連携による非同期チェックも可能。</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Quick Start Section -->
+    <section class="quick-start" id="quickstart">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">3分で始められる</h2>
+                <p class="section-subtitle">HTMLにdata属性を追加するだけ。複雑な設定は不要です。</p>
+            </div>
+
+            <div class="code-example" title="クリックでコードをコピー">
+                <div class="code-header">
+                    <div class="code-dot"></div>
+                    <div class="code-dot"></div>
+                    <div class="code-dot"></div>
+                    <span style="color: #64748b; margin-left: 1rem;">index.html</span>
+                </div>
+                <pre class="code"><span class="comment"><!-- 1. スクリプトを読み込み --></span>
+<span class="keyword">&lt;script</span> <span class="string">src="../dist/FormValidator.min.js"</span><span class="keyword">&gt;&lt;/script&gt;</span>
+
+<span class="comment"><!-- 2. フォームにdata属性を追加 --></span>
+<span class="keyword">&lt;form</span> <span class="string">id="contactForm"</span><span class="keyword">&gt;</span>
+    <span class="keyword">&lt;input</span> <span class="string">type="text"</span> <span class="string">name="name"</span> <span class="string">data-validate="required"</span> <span class="string">placeholder="お名前"</span><span class="keyword">&gt;</span>
+    <span class="keyword">&lt;input</span> <span class="string">type="email"</span> <span class="string">name="email"</span> <span class="string">data-validate="required,email"</span> <span class="string">placeholder="メール"</span><span class="keyword">&gt;</span>
+    <span class="keyword">&lt;input</span> <span class="string">type="tel"</span> <span class="string">name="phone"</span> <span class="string">data-validate="tel"</span> <span class="string">placeholder="電話番号"</span><span class="keyword">&gt;</span>
+    
+    <span class="keyword">&lt;p&gt;</span>必須項目: <span class="keyword">&lt;span</span> <span class="string">data-count_validate</span><span class="keyword">&gt;&lt;/span&gt;&lt;/p&gt;</span>
+    <span class="keyword">&lt;button</span> <span class="string">type="submit"</span><span class="keyword">&gt;</span>送信<span class="keyword">&lt;/button&gt;</span>
+<span class="keyword">&lt;/form&gt;</span>
+
+<span class="comment"><!-- 3. 初期化 --></span>
+<span class="keyword">&lt;script&gt;</span>
+<span class="function">FormValidator</span>.<span class="function">init</span>({
+    validation: {
+        validateOnBlur: <span class="string">true</span>,
+        debounceDelay: <span class="string">300</span>
+    },
+    disableSubmitUntilValid: <span class="string">true</span>
+});
+<span class="keyword">&lt;/script&gt;</span></pre>
+            </div>
+
+            <div style="text-align: center; margin-top: 2rem;">
+                <a href="#" class="btn btn-primary" id="docs-link">
+                    📖 詳細なドキュメントを見る
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Demo Section -->
+    <section class="demo" id="demo">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">実際に試してみよう</h2>
+                <p class="section-subtitle">日本語バリデーションの動作をリアルタイムで確認できます</p>
+            </div>
+
+            <div class="demo-preview">
+                <form class="demo-form" id="demoForm">
+                    <div class="form-group">
+                        <label class="form-label">お名前（必須）</label>
+                        <input type="text" class="form-input" id="demoName" name="demoName" placeholder="山田太郎" data-validate="required,name">
+                        <p class="error-message" data-text="error"></p>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">ふりがな（必須）</label>
+                        <input type="text" class="form-input" id="demoFurigana" name="demoFurigana" placeholder="やまだたろう" data-validate="required,furigana,hiragana">
+                        <p class="error-message" data-text="error"></p>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">メールアドレス（必須）</label>
+                        <input type="email" class="form-input" id="demoEmail" name="demoEmail" placeholder="example@example.com" data-validate="required,email">
+                        <p class="error-message" data-text="error"></p>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">電話番号</label>
+                        <input type="tel" class="form-input" id="demoTel" name="demoTel" placeholder="03-1234-5678" data-validate="tel">
+                        <p class="error-message" data-text="error"></p>
+                    </div>
+
+                    <div class="demo-counter">
+                        必須項目の残り: <span data-count_validate>0</span> 項目
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" id="demoSubmit" style="width: 100%;">
+                        送信
+                    </button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>Varidation</h3>
+                    <p style="color: var(--text-light); margin-bottom: 1rem;">日本語フォームに特化したバリデーションライブラリ</p>
+                    <div style="display: flex; gap: 1rem;">
+                        <a href="#" style="color: var(--text-light);" id="footer-github">GitHub</a>
+                        <a href="#" style="color: var(--text-light);" id="footer-npm">NPM</a>
+                    </div>
+                </div>
+
+                <div class="footer-section">
+                    <h3>ドキュメント</h3>
+                    <ul class="footer-links">
+                        <li><a href="#">クイックスタート</a></li>
+                        <li><a href="#">API リファレンス</a></li>
+                        <li><a href="#">サンプル集</a></li>
+                        <li><a href="#">カスタマイズ</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-section">
+                    <h3>コミュニティ</h3>
+                    <ul class="footer-links">
+                        <li><a href="#">Issues</a></li>
+                        <li><a href="#">Discussions</a></li>
+                        <li><a href="#">コントリビューション</a></li>
+                        <li><a href="#">ライセンス</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-section">
+                    <h3>リソース</h3>
+                    <ul class="footer-links">
+                        <li><a href="#">Changelog</a></li>
+                        <li><a href="#">Roadmap</a></li>
+                        <li><a href="#">ブラウザサポート</a></li>
+                        <li><a href="#">FAQ</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                <p>&copy; 2024 Varidation. MIT License.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Load Varidation Library -->
+    <script src="../dist/FormValidator.js"></script>
+    
+    <script>
+        // Initialize Varidation for demo form
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if FormValidator is available
+            if (typeof FormValidator !== 'undefined') {
+                try {
+                    // Initialize Varidation
+                    FormValidator.init({
+                        validation: {
+                            validateOnInput: true,
+                            validateOnBlur: true,
+                            debounceDelay: 300
+                        },
+                        disableSubmitUntilValid: true,
+                        customMessages: {
+                            required: 'この項目は必須です',
+                            email: '正しいメールアドレスを入力してください',
+                            hiragana: 'ひらがなで入力してください',
+                            tel: '正しい電話番号を入力してください'
+                        }
+                    });
+                    
+                    console.log('Varidation initialized successfully');
+                } catch (error) {
+                    console.error('Failed to initialize Varidation:', error);
+                    setupFallbackValidation();
+                }
+            } else {
+                console.warn('FormValidator not found, using fallback validation');
+                setupFallbackValidation();
+            }
+        });
+        
+        // Fallback validation for demo
+        function setupFallbackValidation() {
+            const demoValidators = {
+                demoName: (value) => value.trim().length > 0,
+                demoFurigana: (value) => /^[ぁ-んー　 ]+$/.test(value) && value.trim().length > 0,
+                demoEmail: (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) && value.trim().length > 0,
+                demoTel: (value) => !value || /^0\d{9,10}$/.test(value.replace(/-/g, ''))
+            };
+
+            const demoMessages = {
+                demoName: 'お名前を入力してください',
+                demoFurigana: 'ひらがなで入力してください',
+                demoEmail: '正しいメールアドレスを入力してください',
+                demoTel: '正しい電話番号を入力してください'
+            };
+
+            const demoFields = ['demoName', 'demoFurigana', 'demoEmail', 'demoTel'];
+            const requiredFields = ['demoName', 'demoFurigana', 'demoEmail'];
+
+            function updateDemoValidation() {
+                let validCount = 0;
+
+                demoFields.forEach(fieldId => {
+                    const input = document.getElementById(fieldId);
+                    const errorElement = input.parentElement.querySelector('[data-text="error"]');
+                    const value = input.value;
+                    const isValid = demoValidators[fieldId](value);
+                    const isRequired = requiredFields.includes(fieldId);
+
+                    // Style the input
+                    input.classList.remove('validation-error', 'validation-success');
+                    if (value) {
+                        if (isValid) {
+                            input.classList.add('validation-success');
+                            if (isRequired) validCount++;
+                        } else {
+                            input.classList.add('validation-error');
+                        }
+                    }
+
+                    // Show/hide error message
+                    if (value && !isValid) {
+                        errorElement.textContent = demoMessages[fieldId];
+                        errorElement.style.display = 'block';
+                    } else {
+                        errorElement.textContent = '';
+                        errorElement.style.display = 'none';
+                    }
+                });
+
+                // Update counter
+                const remaining = requiredFields.length - validCount;
+                const countElement = document.querySelector('[data-count_validate]');
+                if (countElement) {
+                    countElement.textContent = remaining;
+                }
+                
+                // Enable/disable submit button
+                const submitBtn = document.getElementById('demoSubmit');
+                if (submitBtn) {
+                    if (remaining === 0) {
+                        submitBtn.disabled = false;
+                        submitBtn.style.backgroundColor = '';
+                        submitBtn.style.borderColor = '';
+                        submitBtn.style.opacity = '';
+                        submitBtn.style.cursor = '';
+                    } else {
+                        submitBtn.disabled = true;
+                        submitBtn.style.backgroundColor = '#6c757d';
+                        submitBtn.style.borderColor = '#6c757d';
+                        submitBtn.style.opacity = '0.6';
+                        submitBtn.style.cursor = 'not-allowed';
+                    }
+                }
+            }
+
+            // Add event listeners to demo form
+            demoFields.forEach(fieldId => {
+                const input = document.getElementById(fieldId);
+                if (input) {
+                    input.addEventListener('input', updateDemoValidation);
+                    input.addEventListener('blur', updateDemoValidation);
+                }
+            });
+            
+            // Initial update
+            updateDemoValidation();
+        }
+
+        // Prevent form submission in demo
+        document.getElementById('demoForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            alert('素晴らしい！これがVaridationの動作です。\n実際のプロジェクトでは、ここでフォームが送信されます。');
+        });
+
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Intersection Observer for animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, observerOptions);
+
+        // Observe elements
+        document.querySelectorAll('.feature-card, .code-example, .demo-preview').forEach(el => {
+            observer.observe(el);
+        });
+
+        // Copy code functionality
+        document.querySelector('.code-example').addEventListener('click', function() {
+            const codeText = this.querySelector('.code').textContent;
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(codeText).then(() => {
+                    // Show temporary success message
+                    const originalHeader = this.querySelector('.code-header').innerHTML;
+                    this.querySelector('.code-header').innerHTML = 
+                        '<div style="color: #10b981;">✓ コードをコピーしました</div>';
+                    
+                    setTimeout(() => {
+                        this.querySelector('.code-header').innerHTML = originalHeader;
+                    }, 2000);
+                });
+            }
+        });
+
+        // Add some interactive effects
+        document.querySelectorAll('.feature-card').forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-8px) scale(1.02)';
+            });
+            
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(-4px) scale(1)';
+            });
+        });
+
+        // Function to update links (to be called after actual URLs are known)
+        window.updateVaridationLinks = function(githubUrl, docsUrl, npmUrl) {
+            if (githubUrl) {
+                document.getElementById('github-link').href = githubUrl;
+                document.getElementById('footer-github').href = githubUrl;
+            }
+            if (docsUrl) {
+                document.getElementById('docs-link').href = docsUrl;
+            }
+            if (npmUrl) {
+                document.getElementById('footer-npm').href = npmUrl;
+            }
+        };
+    </script>
+</body>
+</html>
+                    <div class="feature-icon">🇯🇵</div>
+                    <h3 class="feature-title">日本語完全対応</h3>
+                    <p class="feature-description">電話番号、郵便番号、ひらがな・カタカナ入力など、日本語フォームに必要な全てのバリデーションルールを標準搭載。</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3 class="feature-title">軽量・高速</h3>
+                    <p class="feature-description">20KB未満の軽量設計で、依存関係なし。初期化は10ms以下、フィールドバリデーションは5ms以下の高速動作。</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">🔧</div>
+                    <h3 class="feature-title">TypeScript対応</h3>
+                    <p class="feature-description">完全な型定義付きで、開発時の型安全性を確保。IDEでの補完やエラー検出もバッチリ。</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">🎨</div>
+                    <h3 class="feature-title">除外エリア機能</h3>
+                    <p class="feature-description">動的なフォーム要件に対応。条件に応じてバリデーション対象を切り替える独自機能を搭載。</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">♿</div>
+                    <h3 class="feature-title">アクセシビリティ</h3>
+                    <p class="feature-description">WCAG準拠のアクセシブルなバリデーション。スクリーンリーダーやキーボード操作にも対応。</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">🔄</div>
+                    <h3 class="feature-title">リアルタイム・非同期</h3>
+                    <p class="feature-description">blur/change/inputイベント対応のリアルタイムバリデーション。API連携による非同期チェックも可能。</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Quick Start Section -->
+    <section class="quick-start" id="quickstart">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">3分で始められる</h2>
+                <p class="section-subtitle">HTMLにdata属性を追加するだけ。複雑な設定は不要です。</p>
+            </div>
+
+            <div class="code-example">
+                <div class="code-header">
+                    <div class="code-dot"></div>
+                    <div class="code-dot"></div>
+                    <div class="code-dot"></div>
+                    <span style="color: #64748b; margin-left: 1rem;">index.html</span>
+                </div>
+                <pre class="code"><span class="comment"><!-- 1. スクリプトを読み込み --></span>
+<span class="keyword">&lt;script</span> <span class="string">src="../dist/FormValidator.min.js"</span><span class="keyword">&gt;&lt;/script&gt;</span>
+
+<span class="comment"><!-- 2. フォームにdata属性を追加 --></span>
+<span class="keyword">&lt;form</span> <span class="string">id="contactForm"</span><span class="keyword">&gt;</span>
+    <span class="keyword">&lt;input</span> <span class="string">type="text"</span> <span class="string">name="name"</span> <span class="string">data-validate="required"</span> <span class="string">placeholder="お名前"</span><span class="keyword">&gt;</span>
+    <span class="keyword">&lt;input</span> <span class="string">type="email"</span> <span class="string">name="email"</span> <span class="string">data-validate="required,email"</span> <span class="string">placeholder="メール"</span><span class="keyword">&gt;</span>
+    <span class="keyword">&lt;input</span> <span class="string">type="tel"</span> <span class="string">name="phone"</span> <span class="string">data-validate="tel"</span> <span class="string">placeholder="電話番号"</span><span class="keyword">&gt;</span>
+    
+    <span class="keyword">&lt;p&gt;</span>必須項目: <span class="keyword">&lt;span</span> <span class="string">data-count

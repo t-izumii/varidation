@@ -1,5 +1,5 @@
 {
-  "name": "@your-org/form-validator",
+  "name": "@your-org/varidation-pro",
   "version": "1.0.0",
   "main": "dist/index.js",
   "module": "dist/index.js",
@@ -310,7 +310,7 @@
     "test": "jest --coverage"
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": ""
+  "author": "Your Name <your.email@example.com>",
+  "license": "SEE LICENSE IN LICENSE",
+  "description": "Professional form validation library for Japanese web applications with accessibility support",
 }
