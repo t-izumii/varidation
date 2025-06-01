@@ -1,8 +1,9 @@
 # Varidation - フォームバリデーションライブラリ
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: Commercial](https://img.shields.io/badge/License-Commercial-blue.svg)](LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-Ready-blue.svg)](https://www.typescriptlang.org/)
 [![JavaScript](https://img.shields.io/badge/JavaScript-ES2020-yellow.svg)](https://developer.mozilla.org/docs/Web/JavaScript)
+[![Price](https://img.shields.io/badge/Price-¥980-green.svg)](https://your-purchase-site.com)
 
 日本語フォームに特化した、軽量で使いやすいバリデーションライブラリです。
 
@@ -1553,7 +1554,16 @@ npm test
 
 ### 12.2 ライセンス
 
-Varidationは[MITライセンス](LICENSE)の下で配布されています。
+Varidationは商用ライセンス（買い切り980円）で提供されています。
+
+**ライセンス内容:**
+- 個人・法人問わず商用利用可能
+- プロジェクト数制限なし
+- 永続利用権（期限なし）
+- 無料アップデート提供
+- 技術サポート付き
+
+詳細は[ライセンス条項](LICENSE)をご確認ください。
 
 ### 12.3 サポート
 
