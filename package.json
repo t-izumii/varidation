@@ -1,9 +1,10 @@
 {
-  "name": "@your-org/varidation",
+  "name": "varidation",
   "version": "1.0.0",
-  "main": "dist/index.js",
-  "module": "dist/index.js",
+  "description": "Commercial form validation library for Japanese web applications with accessibility support - ¥980 per domain",
+  "main": "dist/FormValidator.js",
   "types": "dist/index.d.ts",
+  "private": true,
   "files": [
     "dist"
   ],
@@ -309,7 +310,7 @@
     "dev": "webpack --config webpack.dev.js --watch",
     "test": "jest --coverage"
   },
-  "keywords": ["form", "validation", "javascript", "typescript", "accessibility", "japanese", "commercial", "forms", "web"],
+  "keywords": ["form", "validation", "javascript", "typescript", "accessibility", "japanese", "commercial", "forms", "web", "download"],
   "author": "Your Name <your.email@example.com>",
   "license": "SEE LICENSE IN LICENSE",
   "description": "Commercial form validation library for Japanese web applications with accessibility support - ¥980 per domain"

@@ -64,20 +64,27 @@ Varidationは、現代のWebアプリケーション開発で求められるフ�
 
 ## 3. インストール
 
-### 3.1 npm/yarn
-```bash
-npm install varidation
-# または
-yarn add varidation
-```
-
-### 3.2 CDN
-```html
-<script src="https://unpkg.com/varidation@latest/dist/FormValidator.min.js"></script>
-```
-
-### 3.3 ダウンロード
+### 3.1 ダウンロード
 [Releases](https://github.com/your-org/varidation/releases)からダウンロードして、プロジェクトに含めてください。
+
+```html
+<script src="path/to/FormValidator.js"></script>
+```
+
+### 3.2 ビルド（開発者向け）
+```bash
+# リポジトリのクローン
+git clone https://github.com/your-org/varidation.git
+cd varidation
+
+# 依存関係のインストール
+npm install
+
+# ビルド
+npm run build
+
+# dist/FormValidator.js を使用
+```
 
 ---
 
@@ -90,7 +97,7 @@ yarn add varidation
 <head>
     <meta charset="UTF-8">
     <title>Varidation クイックスタート</title>
-    <script src="https://unpkg.com/varidation@latest/dist/FormValidator.min.js"></script>
+    <script src="path/to/FormValidator.js"></script>
 </head>
 <body>
     <form id="contactForm">
@@ -115,44 +122,11 @@ yarn add varidation
             validation: {
                 validateOnInput: false,
                 validateOnBlur: true,
-                debounceDelay: 500
-    }
-});
-
-const validator = formValidator.validationEngine.validator;
-
-// カスタムバリデーター登録
-validator.registerCustomValidator(
-    'checkUsername',
-    async (value) => {
-        if (!value) return true;
-        // 実際のAPI呼び出しをシミュレート
-        await new Promise(resolve => setTimeout(resolve, 500));
-        return !['admin', 'root', 'test'].includes(value.toLowerCase());
-    },
-    'このユーザー名は使用できません'
-);
-
-validator.registerCustomValidator(
-    'checkEmail',
-    async (value) => {
-        if (!value) return true;
-        // 実際のAPI呼び出しをシミュレート
-        await new Promise(resolve => setTimeout(resolve, 800));
-        return Math.random() > 0.3; // 70%の確率で利用可能
-    },
-    'このメールアドレスは既に使用されています'
-);
-
-validator.registerCustomValidator(
-    'strongPassword',
-    async (value) => {
-        const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-        return regex.test(value);
-    },
-    'パスワードは8文字以上で、大文字・小文字・数字・記号を含む必要があります'
-);
-</script>
+                debounceDelay: 300
+            },
+            disableSubmitUntilValid: true
+        });
+    </script>
 ```
 
 ---
@@ -392,13 +366,21 @@ export interface FieldState {
 
 ### 12.7 ライセンス
 
-Varidationは[MITライセンス](LICENSE)の下で配布されています。
+Varidationは商用ライセンス（買い切り980円）で提供されています。
+
+**ライセンス内容:**
+- 個人・法人問わず商用利用可能
+- プロジェクト数制限なし
+- 永続利用権（期限なし）
+- 無料アップデート提供
+- 技術サポート付き
+
+詳細は[ライセンス条項](LICENSE)をご確認ください。
 
 ### 12.8 サポート
 
 - **GitHub Issues**: [バグ報告・機能要求](https://github.com/your-org/varidation/issues)
 - **ドキュメント**: [公式ドキュメント](https://varidation-docs.netlify.app)
-- **NPMパッケージ**: [npmjs.com](https://www.npmjs.com/package/varidation)
 - **TypeScript型定義**: 本体に含まれています
 
 ---
@@ -425,6 +407,8 @@ Varidationは、日本語フォームに特化した軽量で使いやすいバ�
 - [ ] ビジュアルフォームビルダー
 - [ ] AI駆動の最適化機能
 - [ ] パフォーマンス監視とメトリクス
+- [ ] CDN配信サービスの提供
+- [ ] npmパッケージとしての配布
 
 ### バージョン情報
 - **現在のバージョン**: 1.0.0-beta
@@ -433,24 +417,6 @@ Varidationは、日本語フォームに特化した軽量で使いやすいバ�
 - **TypeScript要件**: TypeScript 4.5+
 
 継続的な改善とコミュニティフィードバックにより、より良いライブラリへと進化していきます。
-
----
-
-### 4.2 ES6 モジュール
-```javascript
-import { FormValidator } from 'varidation';
-
-const validator = FormValidator.init({
-    validation: {
-        validateOnInput: false,
-        validateOnBlur: true,
-        debounceDelay: 300
-    },
-    customMessages: {
-        required: 'この項目は必須です'
-    }
-});
-```
 
 ---
 
@@ -569,12 +535,29 @@ const validator = FormValidator.init({
 | `email-conf` | メール確認（一致チェック） | `data-validate="email-conf"` |
 | `tel` | 電話番号形式（日本） | `data-validate="tel"` |
 | `postal-code` | 郵便番号形式（日本） | `data-validate="postal-code"` |
-| `number` | 数値 | `data-validate="number"` |
+| `number` | 数値（全角半角対応） | `data-validate="number"` |
+| `halfWidth` | 半角数字のみ | `data-validate="halfWidth"` |
 | `hiragana` | ひらがな | `data-validate="hiragana"` |
 | `katakana` | カタカナ | `data-validate="katakana"` |
 | `password` | パスワード（英数8-16文字） | `data-validate="password"` |
-| `halfWidth` | 半角数字 | `data-validate="halfWidth"` |
+| `name` | 名前（メッセージ専用）※ | `data-validate="required,name"` |
+| `furigana` | ふりがな（メッセージ専用）※ | `data-validate="required,furigana,hiragana"` |
+| `text` | テキスト（メッセージ専用）※ | `data-validate="required,text"` |
+| `postal` | 住所（メッセージ専用）※ | `data-validate="required,postal"` |
+| `postal-auto` | 郵便番号自動入力連携※ | `data-validate="postal,postal-auto"` |
 | `replace` | 全角数字→半角変換 | `data-validate="tel,replace"` |
+| `agree` | 同意チェック（メッセージ専用）※ | `data-check_validate="required,agree"` |
+| `emesse1-N` | カスタムメッセージキー | `data-validate="required,emesse1"` |
+
+※ メッセージ専用：バリデーション処理は行わず、エラーメッセージの選択のみに使用
+
+#### グループバリデーション
+
+| 属性 | 説明 | 例 |
+|------|------|-----|
+| `data-check_validate` | チェックボックスグループ | `data-check_validate="required"` |
+| `data-radio_validate` | ラジオボタングループ | `data-radio_validate="required"` |
+| `data-select_validate` | セレクトボックス | `data-select_validate="required"` |
 
 ### 5.4 カスタムエラーメッセージ（emesse）
 
