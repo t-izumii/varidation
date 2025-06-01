@@ -314,6 +314,277 @@ describe('UrlValidator', () => {
 });
 ```
 
+### 5.8 制限事項と注意点
+
+#### 現在の制限事項
+
+- **動的フィールドの自動検出**: フォーム初期化後に動的に追加されたフィールドは自動検出されません。`updateValidationCount()` を手動呼び出しが必要です。
+
+- **ネストしたフォーム**: フォーム内にフォームをネストすることは非対応です。
+
+- **一つのページに複数フォーム**: 現在は一つのページに一つのフォームのみ対応しています。
+
+- **バリデーター固有オプション**: data属性でのバリデーター固有オプションは現在未対応です。
+
+#### パフォーマンスへの影響
+
+- **リアルタイムバリデーション**: `validateOnInput: true` はパフォーマンスに影響する可能性があります。`debounceDelay` で調整してください。
+
+- **大量フィールド**: 100個以上のフィールドがある場合はパフォーマンスを監視してください。
+
+#### ブラウザ互換性
+
+- **Internet Explorer**: 非対応です。
+
+- **旧バージョンブラウザ**: ES2020機能が必要です。
+
+#### アクセシビリティ注意点
+
+- **ARIAラベル**: エラーメッセージには自動的に`aria-live="polite"`が設定されますが、ラベルとフィールドの関連付けは手動で行ってください。
+
+```html
+<!-- 推奨されるアクセシブルなマークアップ -->
+<label for="email">メールアドレス（必須）</label>
+<input type="email" id="email" name="email" 
+       data-validate="required,email" 
+       aria-describedby="email-error">
+<p id="email-error" class="error-text" data-text="error" aria-live="polite"></p>
+```
+
+#### バリデーター固有のオプション
+
+**電話番号バリデーター**
+```javascript
+// ハイフンの許可設定
+FormValidator.init({
+    validationOptions: {
+        tel: {
+            allowHyphens: true  // ハイフン必須
+            // allowHyphens: false // ハイフンなし必須
+            // allowHyphens: null  // 両方許可（デフォルト）
+        }
+    },
+    customMessages: {
+        tel: '電話番号はハイフン付きで入力してください（例：03-1234-5678）'
+    }
+});
+
+// HTMLでの指定
+// <input type="tel" data-validate="tel">
+```
+
+**郵便番号バリデーター**
+```javascript
+// 郵便番号自動入力連携
+FormValidator.init({
+    // 現在は自動入力機能はpostaljscdn.com連携で実装
+    // data-validate="postal-code,postal-auto" で使用
+});
+
+// HTMLでの指定（自動入力連携）
+// <input type="text" class="p-postal-code" data-validate="postal-code,replace">
+// <input type="text" class="p-region p-locality" data-validate="postal,postal-auto">
+```
+
+**メール確認バリデーター**
+```javascript
+// 自動で元のメールフィールドを参照
+FormValidator.init({
+    customMessages: {
+        'email-conf': 'メールアドレスが一致しません'
+    }
+});
+
+// HTMLでの指定
+// <input type="email" name="email" data-validate="email">
+// <input type="email" name="email-conf" data-validate="email-conf">
+```
+
+#### デバッグモード
+```javascript
+// 開発時のデバッグ情報を有効化（非公式）
+FormValidator.init({
+    debug: true,  // コンソールに詳細ログを出力
+    onFieldValidated: (data) => {
+        // バリデーション結果の詳細をコンソールに表示
+        console.group(`フィールドバリデーション: ${data.fieldId}`);
+        console.log('結果:', data.isValid ? '✓ 成功' : '✗ 失敗');
+        console.log('値:', data.field.value);
+        if (data.errors.length > 0) {
+            console.log('エラー:', data.errors);
+        }
+        console.groupEnd();
+    }
+});
+```
+
+#### 動的フォーム制御
+```javascript
+const formManager = FormValidator.init({
+    disableSubmitUntilValid: true
+});
+
+// 動的にフィールドを追加/削除する場合
+// （現在は手動でカウント更新が必要）
+function addDynamicField() {
+    const container = document.getElementById('dynamic-fields');
+    const newField = document.createElement('input');
+    newField.type = 'text';
+    newField.name = 'dynamic_field_' + Date.now();
+    newField.setAttribute('data-validate', 'required');
+    container.appendChild(newField);
+    
+    // カウントを手動更新
+    formManager.updateValidationCount();
+}
+
+// 除外エリアの動的制御
+function toggleSection(sectionId) {
+    const section = document.getElementById(sectionId);
+    if (section.hasAttribute('data-validate-hidden')) {
+        section.removeAttribute('data-validate-hidden');
+    } else {
+        section.setAttribute('data-validate-hidden', '');
+    }
+    formManager.updateValidationCount();
+}
+```
+
+### 5.7 高度なオプション設定例
+
+#### リアルタイムバリデーションの詳細設定
+```javascript
+FormValidator.init({
+    validation: {
+        validateOnInput: true,      // 入力中にバリデーション
+        validateOnBlur: true,       // フォーカスアウト時にバリデーション
+        debounceDelay: 500          // API連携時は長めに設定
+    },
+    errorDisplay: {
+        showOnValidation: true,
+        clearOnFocus: false,        // フォーカス時にエラーを残す
+        animationDuration: 300      // アニメーション時間を長めに
+    },
+    disableSubmitUntilValid: true
+});
+```
+
+#### 詳細なイベントハンドリング
+```javascript
+FormValidator.init({
+    onFieldValidated: (data) => {
+        // フィールドごとの詳細ログ
+        console.log(`[FIELD] ${data.fieldId}:`, {
+            isValid: data.isValid,
+            errors: data.errors,
+            value: data.field.value
+        });
+        
+        // カスタムUI更新
+        if (data.isValid) {
+            data.field.classList.add('field-success');
+        } else {
+            data.field.classList.add('field-error');
+        }
+    },
+    
+    onFormValidated: (data) => {
+        // フォーム全体の状態監視
+        const validFields = Object.values(data.fieldStates)
+            .filter(state => state.isValid).length;
+        
+        console.log(`フォーム状態: ${validFields}/${Object.keys(data.fieldStates).length} フィールドが有効`);
+        
+        // プログレスバーの更新
+        updateProgressBar(data.isValid ? 100 : 
+            (validFields / Object.keys(data.fieldStates).length) * 100);
+    },
+    
+    onCountUpdated: (data) => {
+        // カスタムカウント表示
+        const element = document.querySelector('[data-count_validate]');
+        if (element) {
+            const remaining = data.total - data.valid;
+            element.innerHTML = remaining > 0 ? 
+                `あと<strong>${remaining}</strong>項目` : 
+                '<span style="color: green;">✓ 完了</span>';
+        }
+        
+        // プログレス表示
+        const progress = (data.valid / data.total) * 100;
+        document.querySelector('.progress-bar')?.style.setProperty('width', `${progress}%`);
+    },
+    
+    onSubmitStateChanged: (data) => {
+        // 送信ボタンの状態変更
+        const submitButton = data.form.querySelector('button[type="submit"]');
+        if (submitButton) {
+            if (data.canSubmit) {
+                submitButton.textContent = '送信する';
+                submitButton.classList.add('btn-ready');
+            } else {
+                submitButton.textContent = '入力を完了してください';
+                submitButton.classList.remove('btn-ready');
+            }
+        }
+    }
+});
+```
+
+#### 多言語対応設定
+```javascript
+const messages_ja = {
+    required: 'この項目は必須です',
+    email: '正しいメールアドレスを入力してください',
+    tel: '正しい電話番号を入力してください',
+    'postal-code': '正しい郵便番号を入力してください',
+    hiragana: 'ひらがなで入力してください',
+    katakana: 'カタカナで入力してください',
+    number: '数値で入力してください',
+    halfWidth: '半角数字で入力してください',
+    password: '半角英数字を8文字以上16文字以下で入力してください'
+};
+
+const messages_en = {
+    required: 'This field is required',
+    email: 'Please enter a valid email address',
+    tel: 'Please enter a valid phone number',
+    'postal-code': 'Please enter a valid postal code',
+    hiragana: 'Please enter in hiragana',
+    katakana: 'Please enter in katakana',
+    number: 'Please enter a number',
+    halfWidth: 'Please enter half-width numbers',
+    password: 'Please enter 8-16 alphanumeric characters'
+};
+
+// 言語に応じてメッセージを選択
+const currentLang = document.documentElement.lang || 'ja';
+const messages = currentLang === 'en' ? messages_en : messages_ja;
+
+FormValidator.init({
+    customMessages: messages
+});
+```
+
+#### パフォーマンス最適化設定
+```javascript
+FormValidator.init({
+    validation: {
+        validateOnInput: false,     // 軽量化のため入力時バリデーション無効
+        validateOnBlur: true,
+        debounceDelay: 100          // レスポンシブさを重視
+    },
+    errorDisplay: {
+        animationDuration: 0        // アニメーション無効で高速化
+    },
+    // 必要最小限のイベントのみ
+    onCountUpdated: (data) => {
+        document.querySelector('[data-count_validate]').textContent = 
+            data.total - data.valid;
+    }
+});
+```
+
 ### 12.6 コントリビューションガイドライン
 
 #### 12.6.1 プルリクエストの流れ
@@ -496,11 +767,18 @@ const validator = FormValidator.init({
         debounceDelay: 500
     },
     
+    // バリデーションオプション
+    validationOptions: {
+        tel: {
+            allowHyphens: true     // 電話番号はハイフン必須
+        }
+    },
+    
     // カスタムメッセージ
     customMessages: {
         required: 'この項目は必須です',
         email: '正しいメールアドレスを入力してください',
-        tel: '正しい電話番号を入力してください',
+        tel: '電話番号はハイフン付きで入力してください（例：03-1234-5678）',
         'postal-code': '正しい郵便番号を入力してください',
         hiragana: 'ひらがなで入力してください',
         katakana: 'カタカナで入力してください'
@@ -526,7 +804,107 @@ const validator = FormValidator.init({
 });
 ```
 
-### 5.3 利用可能なバリデーションルール
+### 5.3 全オプション詳細
+
+#### バリデーション設定 (`validation`)
+
+| オプション | 型 | デフォルト | 説明 |
+|------------|------|-----------|------|
+| `validateOnInput` | Boolean | `false` | 入力中にリアルタイムでバリデーションを実行 |
+| `validateOnBlur` | Boolean | `true` | フォーカスアウト時にバリデーションを実行 |
+| `debounceDelay` | Number | `300` | リアルタイムバリデーションの遅延時間（ミリ秒） |
+
+#### エラー表示設定 (`errorDisplay`)
+
+| オプション | 型 | デフォルト | 説明 |
+|------------|------|-----------|------|
+| `showOnValidation` | Boolean | `true` | バリデーション時にエラーメッセージを表示 |
+| `clearOnFocus` | Boolean | `true` | フォーカス時にエラーメッセージをクリア |
+| `animationDuration` | Number | `200` | エラー表示・非表示のアニメーション時間（ミリ秒） |
+
+#### メッセージ設定 (`customMessages`)
+
+| キー | 説明 | 例 |
+|------|------|-----|
+| `required` | 必須項目メッセージ | `'この項目は必須です'` |
+| `email` | メールアドレスメッセージ | `'正しいメールアドレスを入力してください'` |
+| `email-conf` | メール確認メッセージ | `'メールアドレスが一致しません'` |
+| `tel` | 電話番号メッセージ | `'正しい電話番号を入力してください'` |
+| `postal-code` | 郵便番号メッセージ | `'正しい郵便番号を入力してください'` |
+| `hiragana` | ひらがなメッセージ | `'ひらがなで入力してください'` |
+| `katakana` | カタカナメッセージ | `'カタカナで入力してください'` |
+| `number` | 数値メッセージ | `'数値で入力してください'` |
+| `halfWidth` | 半角数字メッセージ | `'半角数字で入力してください'` |
+| `password` | パスワードメッセージ | `'半角英数字を8文字以上16文字以下で入力してください'` |
+| `emesse1`-`emesse100` | カスタムメッセージキー | 任意のメッセージ |
+
+#### イベントコールバック
+
+| オプション | 型 | 説明 |
+|------------|------|------|
+| `onFieldValidated` | Function | 個別フィールドバリデーション完了時に呼び出される |
+| `onFormValidated` | Function | フォーム全体バリデーション完了時に呼び出される |
+| `onCountUpdated` | Function | 必須項目カウント更新時に呼び出される |
+| `onSubmitStateChanged` | Function | 送信ボタンの有効/無効状態変更時に呼び出される |
+
+#### バリデーションオプション (`validationOptions`)
+
+個別のバリデーターに対するオプション設定
+
+| バリデーター | オプション | 型 | デフォルト | 説明 |
+|-------------|------------|------|-----------|------|
+| `tel` | `allowHyphens` | Boolean/null | `null` | 電話番号のハイフン許可設定 |
+
+**電話番号のハイフン設定**
+- `true`: ハイフン付き形式のみ許可（例：03-1234-5678）
+- `false`: ハイフンなし形式のみ許可（例：0312345678）  
+- `null`: 両方の形式を許可（デフォルト）
+
+#### その他のオプション
+
+| オプション | 型 | デフォルト | 説明 |
+|------------|------|-----------|------|
+| `disableSubmitUntilValid` | Boolean | `false` | 全ての必須項目が有効になるまで送信ボタンを無効化 |
+
+#### イベントデータの構造
+
+**FieldValidationEventData** (フィールドバリデーションイベント)
+```javascript
+{
+  fieldId: string,           // フィールドID
+  field: HTMLElement,        // フィールド要素
+  isValid: boolean,          // バリデーション結果
+  errors: ValidationError[]  // エラー配列
+}
+```
+
+**FormValidationEventData** (フォームバリデーションイベント)
+```javascript
+{
+  form: HTMLFormElement,           // フォーム要素
+  isValid: boolean,                // フォーム全体のバリデーション結果
+  fieldStates: Record<string, FieldState>  // 全フィールドの状態
+}
+```
+
+**CountUpdateEventData** (カウント更新イベント)
+```javascript
+{
+  valid: number,        // バリデーション済みフィールド数
+  total: number,        // 必須フィールド総数
+  isComplete: boolean   // 全ての必須フィールドが完了したか
+}
+```
+
+**SubmitStateEventData** (送信状態変更イベント)
+```javascript
+{
+  canSubmit: boolean,      // 送信可能かどうか
+  form: HTMLFormElement    // フォーム要素
+}
+```
+
+### 5.4 利用可能なバリデーションルール
 
 | ルール | 説明 | 例 |
 |--------|------|-----|
@@ -559,7 +937,7 @@ const validator = FormValidator.init({
 | `data-radio_validate` | ラジオボタングループ | `data-radio_validate="required"` |
 | `data-select_validate` | セレクトボックス | `data-select_validate="required"` |
 
-### 5.4 カスタムエラーメッセージ（emesse）
+### 5.5 カスタムエラーメッセージ（emesse）
 
 フィールドごとに個別のエラーメッセージを設定できます：
 
