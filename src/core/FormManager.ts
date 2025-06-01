@@ -701,12 +701,16 @@ export class FormManager {
         // 除外エリア内のグループかチェック
         const isInHiddenArea = this.isFieldInHiddenAreaInternal(groupNode);
         
-        this.log(`Setting up group validation for ${groupId}, isInHiddenArea: ${isInHiddenArea}`);
+        // requiredが明示的に指定されているかチェック
+        const validateRules = groupNode.getAttribute(attr);
+        const isRequired = validateRules && validateRules.includes('required');
         
-        // 初期化（除外エリア内の場合は有効な状態で初期化）
+        this.log(`Setting up group validation for ${groupId}, isInHiddenArea: ${isInHiddenArea}, isRequired: ${isRequired}`);
+        
+        // 初期化（除外エリア内の場合や非必須の場合は有効な状態で初期化）
         this.fieldStates.initializeField(groupId, groupNode as any, { 
             isTouched: false,
-            isValid: isInHiddenArea,  // 除外エリア内は最初から有効
+            isValid: isInHiddenArea || !isRequired,  // 除外エリア内または非必須の場合は最初から有効
             errors: []
         }, (element: HTMLElement) => {
             return this.isFieldInHiddenAreaInternal(element);
@@ -751,8 +755,14 @@ export class FormManager {
         }
         
         const validateRules = groupNode.getAttribute(attr);
-        let isValid = false;
+        let isValid = true;  // デフォルトは有効
         let errorMsg = '';
+        let isRequired = false;  // 必須かどうかのフラグを追加
+        
+        // requiredが明示的に指定されているかチェック
+        if (validateRules && validateRules.includes('required')) {
+            isRequired = true;
+        }
 
         // RequiredValidatorのデフォルトメッセージ仕様
         const defaultMessages = {
@@ -771,24 +781,27 @@ export class FormManager {
             }
         };
 
-        if (attr === 'data-check_validate' || attr === 'data-radio_validate') {
-            isValid = Array.from(fields).some((field: any) => field.checked);
-            if (!isValid) {
-                // ルールに応じたメッセージ
-                let msg = '';
-                if (validateRules && validateRules.includes('agree')) {
-                    msg = defaultMessages['data-check_validate'].agree;
-                } else if (attr === 'data-check_validate') {
-                    msg = defaultMessages['data-check_validate'].checkbox;
-                } else if (attr === 'data-radio_validate') {
-                    msg = defaultMessages['data-radio_validate'].radiobox;
+        // 必須の場合のみバリデーションを実行
+        if (isRequired) {
+            if (attr === 'data-check_validate' || attr === 'data-radio_validate') {
+                isValid = Array.from(fields).some((field: any) => field.checked);
+                if (!isValid) {
+                    // ルールに応じたメッセージ
+                    let msg = '';
+                    if (validateRules && validateRules.includes('agree')) {
+                        msg = defaultMessages['data-check_validate'].agree;
+                    } else if (attr === 'data-check_validate') {
+                        msg = defaultMessages['data-check_validate'].checkbox;
+                    } else if (attr === 'data-radio_validate') {
+                        msg = defaultMessages['data-radio_validate'].radiobox;
+                    }
+                    errorMsg = msg || defaultMessages[attr].default;
                 }
-                errorMsg = msg || defaultMessages[attr].default;
-            }
-        } else if (attr === 'data-select_validate') {
-            isValid = Array.from(fields).some((field: any) => field.value);
-            if (!isValid) {
-                errorMsg = defaultMessages['data-select_validate'].select;
+            } else if (attr === 'data-select_validate') {
+                isValid = Array.from(fields).some((field: any) => field.value);
+                if (!isValid) {
+                    errorMsg = defaultMessages['data-select_validate'].select;
+                }
             }
         }
 
@@ -799,12 +812,12 @@ export class FormManager {
 
         this.fieldStates.updateField(groupId, {
             isValid,
-            errors: isValid ? [] : [{ rule: 'required', message: errorMsg, value: undefined }],
+            errors: (isValid || !isRequired) ? [] : [{ rule: 'required', message: errorMsg, value: undefined }],
             isTouched
         });
 
-        // エラー表示
-        if (!isValid && isTouched) {
+        // エラー表示（必須の場合のみ）
+        if (!isValid && isTouched && isRequired) {
             this.errorDisplay.showFieldError(groupId, errorMsg, groupNode);
         } else {
             this.errorDisplay.clearField(groupId);

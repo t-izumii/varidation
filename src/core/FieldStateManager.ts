@@ -268,11 +268,20 @@ export class FieldStateManager {
             }
             // グループバリデーション（チェックボックス・ラジオ・セレクト）
             if (el instanceof HTMLElement) {
-                if (
-                    el.hasAttribute('data-check_validate') ||
-                    el.hasAttribute('data-radio_validate') ||
-                    el.hasAttribute('data-select_validate')
-                ) {
+                // requiredが明示的に指定されているグループのみ必須として扱う
+                const checkValidate = el.getAttribute('data-check_validate');
+                const radioValidate = el.getAttribute('data-radio_validate');
+                const selectValidate = el.getAttribute('data-select_validate');
+                
+                if (checkValidate && checkValidate.includes('required')) {
+                    required.push(fieldId);
+                    continue;
+                }
+                if (radioValidate && radioValidate.includes('required')) {
+                    required.push(fieldId);
+                    continue;
+                }
+                if (selectValidate && selectValidate.includes('required')) {
                     required.push(fieldId);
                     continue;
                 }
