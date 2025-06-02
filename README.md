@@ -679,6 +679,12 @@ Varidationは、日本語フォームに特化した軽量で使いやすいバ�
 <!-- 複数ルール（カンマ区切り） -->
 <input type="email" name="email" data-validate="required,email">
 
+<!-- 長さ制限 -->
+<input type="text" name="message" data-validate="required,minlength:10,maxlength:500">
+
+<!-- 数値範囲 -->
+<input type="number" name="age" data-validate="required,integer,min:0,max:120">
+
 <!-- 日本語対応 -->
 <input type="tel" name="phone" data-validate="required,tel">
 <input type="text" name="postal" data-validate="required,postal-code">
@@ -889,11 +895,20 @@ const validator = FormValidator.init({
 | `email-conf` | メール確認（一致チェック） | `data-validate="email-conf"` |
 | `tel` | 電話番号形式（日本） | `data-validate="tel"` |
 | `postal-code` | 郵便番号形式（日本） | `data-validate="postal-code"` |
+| `url` | URL形式 | `data-validate="url"` |
 | `number` | 数値（全角半角対応） | `data-validate="number"` |
+| `integer` | 整数 | `data-validate="integer"` |
 | `halfWidth` | 半角数字のみ | `data-validate="halfWidth"` |
 | `hiragana` | ひらがな | `data-validate="hiragana"` |
 | `katakana` | カタカナ | `data-validate="katakana"` |
+| `alpha` | 英字のみ | `data-validate="alpha"` |
+| `alphanumeric` | 英数字のみ | `data-validate="alphanumeric"` |
 | `password` | パスワード（英数8-16文字） | `data-validate="password"` |
+| `min:n` | 最小値 | `data-validate="min:0"` |
+| `max:n` | 最大値 | `data-validate="max:999"` |
+| `minlength:n` | 最小文字数 | `data-validate="minlength:8"` |
+| `maxlength:n` | 最大文字数 | `data-validate="maxlength:100"` |
+| `pattern:regex` | 正規表現パターン | `data-validate="pattern:^[A-Z]+$"` |
 | `name` | 名前（メッセージ専用）※ | `data-validate="required,name"` |
 | `furigana` | ふりがな（メッセージ専用）※ | `data-validate="required,furigana,hiragana"` |
 | `text` | テキスト（メッセージ専用）※ | `data-validate="required,text"` |
@@ -1213,8 +1228,13 @@ FormValidator.init({
         email: '正しいメールアドレスを入力してください',
         tel: '正しい電話番号を入力してください',
         'postal-code': '正しい郵便番号を入力してください',
+        url: '有効なURLを入力してください',
+        number: '数値で入力してください',
+        integer: '整数で入力してください',
         hiragana: 'ひらがなで入力してください',
         katakana: 'カタカナで入力してください',
+        alpha: '英字のみで入力してください',
+        alphanumeric: '英数字のみで入力してください',
         // フィールド固有のメッセージ
         emesse1: 'お名前は必須入力項目です',
         emesse2: '会社用メールアドレスを入力してください'
@@ -1296,6 +1316,16 @@ FormValidator.init({
     </div>
     
     <div>
+        <label for="website">ウェブサイトURL</label>
+        <input type="url" id="website" name="website" data-validate="url" placeholder="https://example.com">
+    </div>
+    
+    <div>
+        <label for="age">年齢</label>
+        <input type="number" id="age" name="age" data-validate="integer,min:0,max:120" placeholder="25">
+    </div>
+    
+    <div>
         <label for="message">お問い合わせ内容（必須）</label>
         <textarea id="message" name="message" data-validate="required" rows="5"></textarea>
     </div>
@@ -1318,6 +1348,8 @@ FormValidator.init({
         required: 'この項目は必須です',
         email: '正しいメールアドレスを入力してください',
         tel: '正しい電話番号を入力してください',
+        url: '有効なURLを入力してください',
+        integer: '整数で入力してください',
         hiragana: 'ひらがなで入力してください'
     }
 });
@@ -1482,26 +1514,7 @@ const validator = FormValidator.init({
 });
 ```
 
-### 5.3 利用可能なバリデーションルール
 
-| ルール | 説明 | 例 |
-|--------|------|-----|
-| `required` | 必須項目 | `data-validate="required"` |
-| `email` | メールアドレス形式 | `data-validate="email"` |
-| `tel` | 電話番号形式（日本） | `data-validate="tel"` |
-| `postalcode` | 郵便番号形式（日本） | `data-validate="postalcode"` |
-| `url` | URL形式 | `data-validate="url"` |
-| `number` | 数値 | `data-validate="number"` |
-| `integer` | 整数 | `data-validate="integer"` |
-| `minlength:n` | 最小文字数 | `data-validate="minlength:8"` |
-| `maxlength:n` | 最大文字数 | `data-validate="maxlength:100"` |
-| `min:n` | 最小値 | `data-validate="min:0"` |
-| `max:n` | 最大値 | `data-validate="max:999"` |
-| `pattern:regex` | 正規表現パターン | `data-validate="pattern:^[A-Z]+$"` |
-| `hiragana` | ひらがな | `data-validate="hiragana"` |
-| `katakana` | カタカナ | `data-validate="katakana"` |
-| `alpha` | 英字のみ | `data-validate="alpha"` |
-| `alphanumeric` | 英数字のみ | `data-validate="alphanumeric"` |
 
 ---
 
