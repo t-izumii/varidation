@@ -134,7 +134,7 @@ Varidationは、現代のWebアプリケーション開発で求められるフ�
 
 ```bash
 # リポジトリのクローン
-git clone https://github.com/your-org/varidation.git
+git clone https://github.com/t-izumii/varidation.git
 cd varidation
 
 # 依存関係のインストール
@@ -625,8 +625,8 @@ VaridationはMITライセンスで提供されています。
 
 ### 11.8 サポート
 
-- **GitHub Issues**: [バグ報告・機能要求](https://github.com/your-org/varidation/issues)
-- **ドキュメント**: [公式ドキュメント](https://varidation-docs.netlify.app)
+- **GitHub Issues**: [バグ報告・機能要求](https://github.com/t-izumii/varidation/issues)
+- **ドキュメント**: [公式ドキュメント](https://github.com/t-izumii/varidation#readme)
 - **TypeScript型定義**: 本体に含まれています
 - **オープンソース**: MITライセンスで自由に利用可能
 
@@ -1338,7 +1338,7 @@ FormValidator.init({
 ## 3. インストール
 
 ### 3.1 ダウンロード
-[Releases](https://github.com/your-org/varidation/releases)からダウンロードして、プロジェクトに含めてください。
+[Releases](https://github.com/t-izumii/varidation/releases)からダウンロードして、プロジェクトに含めてください。
 
 ```html
 <script src="path/to/FormValidator.js"></script>
@@ -1347,7 +1347,7 @@ FormValidator.init({
 ### 3.2 ビルド（開発者向け）
 ```bash
 # リポジトリのクローン
-git clone https://github.com/your-org/varidation.git
+git clone https://github.com/t-izumii/varidation.git
 cd varidation
 
 # 依存関係のインストール
@@ -1891,8 +1891,8 @@ VaridationはMITライセンスで提供されています。
 
 ### 12.3 サポート
 
-- **GitHub Issues**: [バグ報告・機能要求](https://github.com/your-org/varidation/issues)
-- **ドキュメント**: [公式ドキュメント](https://varidation-docs.netlify.app)
+- **GitHub Issues**: [バグ報告・機能要求](https://github.com/t-izumii/varidation/issues)
+- **ドキュメント**: [公式ドキュメント](https://github.com/t-izumii/varidation#readme)
 - **オープンソース**: MITライセンスで自由に利用可能
 
 ---

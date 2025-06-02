@@ -311,7 +311,15 @@
     "test": "jest --coverage"
   },
   "keywords": ["form", "validation", "javascript", "typescript", "accessibility", "japanese", "mit", "forms", "web", "library"],
-  "author": "Your Name <your.email@example.com>",
+  "author": "t-izumii",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/t-izumii/varidation.git"
+  },
+  "bugs": {
+    "url": "https://github.com/t-izumii/varidation/issues"
+  },
+  "homepage": "https://github.com/t-izumii/varidation#readme",
   "license": "MIT",
   "description": "Form validation library for Japanese web applications with accessibility support - MIT Licensed"
 }
