@@ -1,10 +1,10 @@
 {
   "name": "varidation",
   "version": "1.0.0",
-  "description": "Commercial form validation library for Japanese web applications with accessibility support - ¥980 per domain",
+  "description": "Form validation library for Japanese web applications with accessibility support - MIT Licensed",
   "main": "dist/FormValidator.js",
   "types": "dist/index.d.ts",
-  "private": true,
+  "private": false,
   "files": [
     "dist"
   ],
@@ -310,8 +310,8 @@
     "dev": "webpack --config webpack.dev.js --watch",
     "test": "jest --coverage"
   },
-  "keywords": ["form", "validation", "javascript", "typescript", "accessibility", "japanese", "commercial", "forms", "web", "download"],
+  "keywords": ["form", "validation", "javascript", "typescript", "accessibility", "japanese", "mit", "forms", "web", "library"],
   "author": "Your Name <your.email@example.com>",
-  "license": "SEE LICENSE IN LICENSE",
-  "description": "Commercial form validation library for Japanese web applications with accessibility support - ¥980 per domain"
+  "license": "MIT",
+  "description": "Form validation library for Japanese web applications with accessibility support - MIT Licensed"
 }

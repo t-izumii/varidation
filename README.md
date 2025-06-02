@@ -1,9 +1,9 @@
 # Varidation - フォームバリデーションライブラリ
 
-[![License: Commercial](https://img.shields.io/badge/License-Commercial-blue.svg)](LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-Ready-blue.svg)](https://www.typescriptlang.org/)
 [![JavaScript](https://img.shields.io/badge/JavaScript-ES2020-yellow.svg)](https://developer.mozilla.org/docs/Web/JavaScript)
-[![Price](https://img.shields.io/badge/Price-¥980-green.svg)](https://your-purchase-site.com)
+[![Open Source](https://img.shields.io/badge/Open_Source-MIT-green.svg)](LICENSE)
 
 日本語フォームに特化した、軽量で使いやすいバリデーションライブラリです。
 
@@ -11,16 +11,15 @@
 
 1. [概要](#1-概要)
 2. [特徴](#2-特徴)
-3. [インストール](#3-インストール)
-4. [クイックスタート](#4-クイックスタート)
-5. [基本的な使用方法](#5-基本的な使用方法)
-6. [除外エリア機能](#6-除外エリア機能)
-7. [高度な機能](#7-高度な機能)
-8. [API リファレンス](#8-api-リファレンス)
-9. [カスタマイズ](#9-カスタマイズ)
-10. [サンプル集](#10-サンプル集)
-11. [ブラウザサポート](#11-ブラウザサポート)
-12. [開発・コントリビューション](#12-開発コントリビューション)
+3. [クイックスタート](#3-クイックスタート)
+4. [基本的な使用方法](#4-基本的な使用方法)
+5. [除外エリア機能](#5-除外エリア機能)
+6. [高度な機能](#6-高度な機能)
+7. [API リファレンス](#7-api-リファレンス)
+8. [カスタマイズ](#8-カスタマイズ)
+9. [サンプル集](#9-サンプル集)
+10. [ブラウザサポート](#10-ブラウザサポート)
+11. [開発・コントリビューション](#11-開発コントリビューション)
 
 ---
 
@@ -60,37 +59,13 @@ Varidationは、現代のWebアプリケーション開発で求められるフ�
 - メモリ使用量: < 500KB
 - バンドルサイズ: < 20KB（gzip）
 
----
 
-## 3. インストール
-
-### 3.1 ダウンロード
-[Releases](https://github.com/your-org/varidation/releases)からダウンロードして、プロジェクトに含めてください。
-
-```html
-<script src="path/to/FormValidator.js"></script>
-```
-
-### 3.2 ビルド（開発者向け）
-```bash
-# リポジトリのクローン
-git clone https://github.com/your-org/varidation.git
-cd varidation
-
-# 依存関係のインストール
-npm install
-
-# ビルド
-npm run build
-
-# dist/FormValidator.js を使用
-```
 
 ---
 
-## 4. クイックスタート
+## 3. クイックスタート
 
-### 4.1 基本的なHTMLフォーム
+### 3.1 基本的なHTMLフォーム
 ```html
 <!DOCTYPE html>
 <html lang="ja">
@@ -131,20 +106,20 @@ npm run build
 
 ---
 
-## 11. ブラウザサポート
+## 10. ブラウザサポート
 
-### 11.1 デスクトップブラウザ
+### 10.1 デスクトップブラウザ
 - Chrome: 最新2バージョン
 - Firefox: 最新2バージョン
 - Safari: 最新2バージョン
 - Edge: 最新2バージョン
 
-### 11.2 モバイルブラウザ
+### 10.2 モバイルブラウザ
 - iOS Safari: iOS 12+
 - Chrome for Android: Android 8+
 - Samsung Internet: 最新2バージョン
 
-### 11.3 必要なブラウザ機能
+### 10.3 必要なブラウザ機能
 - ES2020対応
 - Promise/async-await
 - WeakMap
@@ -153,9 +128,9 @@ npm run build
 
 ---
 
-## 12. 開発・コントリビューション
+## 11. 開発・コントリビューション
 
-### 12.1 開発環境のセットアップ
+### 11.1 開発環境のセットアップ
 
 ```bash
 # リポジトリのクローン
@@ -181,7 +156,7 @@ npm run type-check
 npm run lint
 ```
 
-### 12.2 プロジェクト構造
+### 11.2 プロジェクト構造
 
 ```
 src/
@@ -219,15 +194,15 @@ src/
 └── index.ts              # エントリーポイント
 ```
 
-### 12.3 アーキテクチャ概要
+### 11.3 アーキテクチャ概要
 
-#### 12.3.1 設計思想
+#### 11.3.1 設計思想
 - **単一責任の原則**: 各クラスは明確に定義された責任を持つ
 - **依存性注入**: 疎結合な設計により、テストとメンテナンスを容易にする
 - **Chain of Responsibility**: バリデーターチェーンによる柔軟な組み合わせ
 - **Observer Pattern**: イベント駆動による拡張可能性
 
-#### 12.3.2 主要コンポーネント
+#### 11.3.2 主要コンポーネント
 
 **FormManager**
 - フォーム全体の管理を行うメインクラス
@@ -244,7 +219,7 @@ src/
 - Chain of Responsibilityパターンの実装
 - 共通のエラーハンドリング機能
 
-### 12.4 新しいバリデーターの追加方法
+### 11.4 新しいバリデーターの追加方法
 
 ```typescript
 // 新しいバリデータークラスの作成例
@@ -288,7 +263,7 @@ export class UrlValidator extends BaseValidator {
 this.registerValidatorFactory('url', () => new UrlValidator());
 ```
 
-### 12.5 テストの実装（TODO）
+### 11.5 テストの実装（TODO）
 
 ```typescript
 // src/tests/validators/UrlValidator.test.ts の例
@@ -585,9 +560,9 @@ FormValidator.init({
 });
 ```
 
-### 12.6 コントリビューションガイドライン
+### 11.6 コントリビューションガイドライン
 
-#### 12.6.1 プルリクエストの流れ
+#### 11.6.1 プルリクエストの流れ
 
 1. **Issue の作成**: 新機能やバグ修正の前に、Issueで議論
 2. **フォーク**: リポジトリをフォークし、feature ブランチを作成
@@ -595,7 +570,7 @@ FormValidator.init({
 4. **テスト**: 新機能には対応するテストを追加
 5. **プルリクエスト**: 詳細な説明と共にPRを作成
 
-#### 12.6.2 コーディング規約
+#### 11.6.2 コーディング規約
 
 ```typescript
 // ✅ Good: 明確なクラス名と責任分離
@@ -619,7 +594,7 @@ export class Validator {
 }
 ```
 
-#### 12.6.3 コメント規約
+#### 11.6.3 コメント規約
 
 ```typescript
 /**
@@ -635,24 +610,25 @@ export interface FieldState {
 }
 ```
 
-### 12.7 ライセンス
+### 11.7 ライセンス
 
-Varidationは商用ライセンス（買い切り980円）で提供されています。
+VaridationはMITライセンスで提供されています。
 
 **ライセンス内容:**
 - 個人・法人問わず商用利用可能
 - プロジェクト数制限なし
-- 永続利用権（期限なし）
-- 無料アップデート提供
-- 技術サポート付き
+- 無料で利用可能
+- 改変・再配布可能
+- ソースコード公開
 
 詳細は[ライセンス条項](LICENSE)をご確認ください。
 
-### 12.8 サポート
+### 11.8 サポート
 
 - **GitHub Issues**: [バグ報告・機能要求](https://github.com/your-org/varidation/issues)
 - **ドキュメント**: [公式ドキュメント](https://varidation-docs.netlify.app)
 - **TypeScript型定義**: 本体に含まれています
+- **オープンソース**: MITライセンスで自由に利用可能
 
 ---
 
@@ -804,7 +780,7 @@ const validator = FormValidator.init({
 });
 ```
 
-### 5.3 全オプション詳細
+### 4.3 全オプション詳細
 
 #### バリデーション設定 (`validation`)
 
@@ -904,7 +880,7 @@ const validator = FormValidator.init({
 }
 ```
 
-### 5.4 利用可能なバリデーションルール
+### 4.4 利用可能なバリデーションルール
 
 | ルール | 説明 | 例 |
 |--------|------|-----|
@@ -937,7 +913,7 @@ const validator = FormValidator.init({
 | `data-radio_validate` | ラジオボタングループ | `data-radio_validate="required"` |
 | `data-select_validate` | セレクトボックス | `data-select_validate="required"` |
 
-### 5.5 カスタムエラーメッセージ（emesse）
+### 4.5 カスタムエラーメッセージ（emesse）
 
 フィールドごとに個別のエラーメッセージを設定できます：
 
@@ -958,11 +934,11 @@ FormValidator.init({
 
 ---
 
-## 6. 除外エリア機能
+## 5. 除外エリア機能
 
 `data-validate-hidden` 属性を使用して、特定のエリアをバリデーション対象から動的に除外できます。
 
-### 6.1 基本的な使用方法
+### 5.1 基本的な使用方法
 
 ```html
 <!-- 除外エリア全体 -->
@@ -976,7 +952,7 @@ FormValidator.init({
 <input type="text" name="optional" data-validate="required" data-validate-hidden>
 ```
 
-### 6.2 動的な切り替え
+### 5.2 動的な切り替え
 
 ```javascript
 function toggleArea() {
@@ -996,7 +972,7 @@ function toggleArea() {
 }
 ```
 
-### 6.3 実装例
+### 5.3 実装例
 
 ```html
 <form id="dynamicForm">
@@ -1053,9 +1029,9 @@ function toggleCompanyInfo() {
 
 ---
 
-## 7. 高度な機能
+## 6. 高度な機能
 
-### 7.1 カスタムバリデーター
+### 6.1 カスタムバリデーター
 
 独自のバリデーションルールを追加できます。
 
@@ -1093,7 +1069,7 @@ validator.registerCustomValidator(
 <input type="date" name="birthdate" data-validate="required,adultAge">
 ```
 
-### 7.2 非同期バリデーション
+### 6.2 非同期バリデーション
 
 API通信を伴うバリデーション（重複チェックなど）も可能です。
 
@@ -1137,9 +1113,9 @@ validator.registerCustomValidator(
 
 ---
 
-## 8. API リファレンス
+## 7. API リファレンス
 
-### 8.1 初期化メソッド
+### 7.1 初期化メソッド
 
 #### `FormValidator.init(options)`
 
@@ -1168,7 +1144,7 @@ interface FormManagerOptions {
 }
 ```
 
-### 8.2 静的メソッド
+### 7.2 静的メソッド
 
 #### `FormValidator.getInstance()`
 現在のインスタンスを取得します。
@@ -1179,7 +1155,7 @@ interface FormManagerOptions {
 #### `FormValidator.check()`
 全フィールドの一括バリデーションを実行します。
 
-### 8.3 インスタンスメソッド
+### 7.3 インスタンスメソッド
 
 取得したインスタンス（`FormManager`）で利用可能なメソッド：
 
@@ -1201,7 +1177,7 @@ interface FormManagerOptions {
 #### `on(event, handler)` / `off(event, handler)`
 イベントリスナーを追加/削除します。
 
-### 8.4 イベントデータの型定義
+### 7.4 イベントデータの型定義
 
 ```typescript
 interface FieldValidationEventData {
@@ -1226,9 +1202,9 @@ interface CountUpdateEventData {
 
 ---
 
-## 9. カスタマイズ
+## 8. カスタマイズ
 
-### 9.1 エラーメッセージのカスタマイズ
+### 8.1 エラーメッセージのカスタマイズ
 
 ```javascript
 FormValidator.init({
@@ -1246,7 +1222,7 @@ FormValidator.init({
 });
 ```
 
-### 9.2 スタイルカスタマイズ
+### 8.2 スタイルカスタマイズ
 
 Varidationは以下のCSSクラスを自動的に追加します。
 
@@ -1277,7 +1253,7 @@ Varidationは以下のCSSクラスを自動的に追加します。
 }
 ```
 
-### 9.3 バリデーション設定のカスタマイズ
+### 8.3 バリデーション設定のカスタマイズ
 
 ```javascript
 // 電話番号のハイフン設定
@@ -1293,9 +1269,9 @@ FormValidator.init({
 
 ---
 
-## 10. サンプル集
+## 9. サンプル集
 
-### 10.1 基本的なお問い合わせフォーム
+### 9.1 基本的なお問い合わせフォーム
 
 ```html
 <form id="contactForm">
@@ -1361,20 +1337,27 @@ FormValidator.init({
 
 ## 3. インストール
 
-### 3.1 npm/yarn
-```bash
-npm install varidation
-# または
-yarn add varidation
-```
-
-### 3.2 CDN
-```html
-<script src="https://unpkg.com/varidation@latest/dist/FormValidator.min.js"></script>
-```
-
-### 3.3 ダウンロード
+### 3.1 ダウンロード
 [Releases](https://github.com/your-org/varidation/releases)からダウンロードして、プロジェクトに含めてください。
+
+```html
+<script src="path/to/FormValidator.js"></script>
+```
+
+### 3.2 ビルド（開発者向け）
+```bash
+# リポジトリのクローン
+git clone https://github.com/your-org/varidation.git
+cd varidation
+
+# 依存関係のインストール
+npm install
+
+# ビルド
+npm run build
+
+# dist/FormValidator.js を使用
+```
 
 ---
 
@@ -1387,7 +1370,7 @@ yarn add varidation
 <head>
     <meta charset="UTF-8">
     <title>Varidation クイックスタート</title>
-    <script src="https://unpkg.com/varidation@latest/dist/FormValidator.min.js"></script>
+    <script src="path/to/FormValidator.js"></script>
 </head>
 <body>
     <form id="contactForm">
@@ -1415,18 +1398,7 @@ yarn add varidation
 </html>
 ```
 
-### 4.2 ES6 モジュール
-```javascript
-import { FormValidator } from 'varidation';
 
-const validator = FormValidator.init({
-    validateOn: ['blur', 'change'],
-    count: true,
-    messages: {
-        required: 'この項目は必須です'
-    }
-});
-```
 
 ---
 
@@ -1906,14 +1878,14 @@ npm test
 
 ### 12.2 ライセンス
 
-Varidationは商用ライセンス（買い切り980円）で提供されています。
+VaridationはMITライセンスで提供されています。
 
 **ライセンス内容:**
 - 個人・法人問わず商用利用可能
 - プロジェクト数制限なし
-- 永続利用権（期限なし）
-- 無料アップデート提供
-- 技術サポート付き
+- 無料で利用可能
+- 改変・再配布可能
+- ソースコード公開
 
 詳細は[ライセンス条項](LICENSE)をご確認ください。
 
@@ -1921,7 +1893,7 @@ Varidationは商用ライセンス（買い切り980円）で提供されてい�
 
 - **GitHub Issues**: [バグ報告・機能要求](https://github.com/your-org/varidation/issues)
 - **ドキュメント**: [公式ドキュメント](https://varidation-docs.netlify.app)
-- **NPMパッケージ**: [npmjs.com](https://www.npmjs.com/package/varidation)
+- **オープンソース**: MITライセンスで自由に利用可能
 
 ---
 
