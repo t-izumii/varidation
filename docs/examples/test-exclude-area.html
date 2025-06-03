@@ -211,7 +211,7 @@
         <div class="form-item">
             <div class="form-key">名前<span class="required">(必須)</span></div>
             <div class="form-val">
-                <input type="text" name="name" data-validate="required" value="">
+                <input type="text" name="name" data-validate="required,name" value="">
                 <p class="error-text" data-text="error"></p>
             </div>
         </div>
@@ -344,8 +344,7 @@
             // FormValidatorを初期化
             const formManager = FormValidator.init({
                 customMessages: {
-                    // カスタムメッセージがあれば追加
-                    emesse1: 'これはテストメッセージです。'
+                    // カスタムメッセージがあれば
                 },
                 count: true,
                 disableSubmitUntilValid: true,
