@@ -614,16 +614,17 @@ export class FormManager {
         for (const fieldId in allStates) {
             const element = document.querySelector(`[name='${fieldId}'], [id='${fieldId}']`);
             if (element && this.isFieldInHiddenAreaInternal(element as HTMLElement)) {
-                // 除外エリア内のフィールドの状態を有効に更新
+                // 除外エリア内のフィールドの状態を有効に更新（isTouchedもリセット）
                 this.fieldStates.updateField(fieldId, {
                     isValid: true,
-                    errors: []
+                    errors: [],
+                    isTouched: false  // isTouchedフラグもリセット
                 });
                 
                 // エラー表示をクリア
                 this.errorDisplay.clearField(fieldId);
                 
-                this.log(`Cleared error for hidden field: ${fieldId}`);
+                this.log(`Cleared error and isTouched flag for hidden field: ${fieldId}`);
             }
         }
     }
@@ -678,6 +679,14 @@ export class FormManager {
                     fields = groupNode.querySelectorAll('select');
                 } else {
                     fields = groupNode.querySelectorAll(`input[type=${type}]`);
+                }
+                
+                // 除外エリア内のグループの場合はisTouchedもリセット
+                if (this.isFieldInHiddenAreaInternal(groupNode as HTMLElement)) {
+                    this.fieldStates.updateField(groupId, {
+                        isTouched: false  // 除外エリア内のグループのisTouchedフラグをリセット
+                    });
+                    this.log(`Reset isTouched flag for hidden group: ${groupId}`);
                 }
                 
                 // グループバリデーションを再実行
@@ -739,11 +748,11 @@ export class FormManager {
         if (this.isFieldInHiddenAreaInternal(groupNode)) {
             this.log(`Skipping group validation for hidden area: ${groupId}`);
             
-            // 除外エリア内のグループは常に有効として扱う
+            // 除外エリア内のグループは常に有効として扱う（isTouchedもfalseに設定）
             this.fieldStates.updateField(groupId, {
                 isValid: true,
                 errors: [],
-                isTouched: isUserAction
+                isTouched: false  // 除外エリア内では常にisTouchedをfalse
             });
             
             // エラー表示をクリア
@@ -805,10 +814,17 @@ export class FormManager {
             }
         }
 
-        // isTouched管理
+        // isTouched管理 - isUserActionがfalseの場合は明示的にfalseに設定
         const state = this.fieldStates.getField(groupId);
-        let isTouched = state?.isTouched ?? false;
-        if (isUserAction) isTouched = true;
+        let isTouched: boolean;
+        
+        if (isUserAction) {
+            // ユーザーアクションの場合はtrueに設定
+            isTouched = true;
+        } else {
+            // プログラムによる再評価の場合はfalseに設定
+            isTouched = false;
+        }
 
         this.fieldStates.updateField(groupId, {
             isValid,
@@ -816,7 +832,7 @@ export class FormManager {
             isTouched
         });
 
-        // エラー表示（必須の場合のみ）
+        // エラー表示（必須の場合のみ、かつisTouchedがtrueの場合のみ）
         if (!isValid && isTouched && isRequired) {
             this.errorDisplay.showFieldError(groupId, errorMsg, groupNode);
         } else {

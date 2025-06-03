@@ -208,8 +208,11 @@ export class FieldStateManager {
         
         // 除外エリア内の場合は常に有効、そうでなければ値をチェック
         let isValid: boolean;
+        let shouldResetTouched = false;
+        
         if (isInHiddenArea) {
             isValid = true;
+            shouldResetTouched = true;  // 除外エリア内の場合はisTouchedもリセット
         } else if (!isRequired) {
             isValid = true;
         } else {
@@ -219,14 +222,23 @@ export class FieldStateManager {
         }
         
         // 状態を更新
-        this.fields.set(fieldId, {
-            ...currentState,
+        const updates: Partial<FieldState> = {
             isValid: isValid,
             errors: isValid ? [] : currentState.errors
+        };
+        
+        // 除外エリア内の場合はisTouchedもリセット
+        if (shouldResetTouched) {
+            updates.isTouched = false;
+        }
+        
+        this.fields.set(fieldId, {
+            ...currentState,
+            ...updates
         });
         
         if (typeof console !== 'undefined' && console.log) {
-            console.log(`[FieldStateManager] Reevaluated field ${fieldId}: isInHiddenArea=${isInHiddenArea}, isRequired=${isRequired}, isValid=${isValid}`);
+            console.log(`[FieldStateManager] Reevaluated field ${fieldId}: isInHiddenArea=${isInHiddenArea}, isRequired=${isRequired}, isValid=${isValid}, resetTouched=${shouldResetTouched}`);
         }
     }
 
