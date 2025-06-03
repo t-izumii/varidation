@@ -360,8 +360,6 @@
             });
             
             const toggleButton = document.querySelector('.toggle-button');
-            toggleButton.parentNode.insertBefore(errorTestButton, toggleButton.nextSibling);
-            toggleButton.parentNode.insertBefore(updateTestButton, errorTestButton.nextSibling);
             
             // 初期カウントを設定（遅延実行）
             setTimeout(() => {
@@ -387,7 +385,7 @@
             // カウントを手動で更新
             const formManager = FormValidator.getInstance();
             if (formManager) {       
-                // FormValidator.update();
+                FormValidator.update();
             }
         }
     </script>

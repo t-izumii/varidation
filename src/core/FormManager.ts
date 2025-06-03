@@ -560,21 +560,31 @@ export class FormManager {
      * 公開API: カウントを手動で更新（除外エリアの切り替え時などに使用）
      */
     updateValidationCount(): void {
-        this.log('Manual count update triggered');
+        console.log('🔥 DEBUG: updateValidationCount called - NEW VERSION');
+        this.log('=== Manual count update triggered ===');
         
         // 除外エリアの状態変更に対応するため、全フィールドの必須状態を再評価
+        this.log('Step 1: Reevaluating all fields required state');
         this.fieldStates.reevaluateAllFieldsRequiredState((fieldId: string) => {
             const element = document.querySelector(`[name='${fieldId}'], [id='${fieldId}']`);
-            return element ? this.isFieldInHiddenAreaInternal(element as HTMLElement) : false;
+            const isHidden = element ? this.isFieldInHiddenAreaInternal(element as HTMLElement) : false;
+            this.log(`  Field ${fieldId}: isHidden=${isHidden}`);
+            return isHidden;
         });
         
         // 除外エリア内のフィールドのエラーをクリア
+        this.log('Step 2: Clearing hidden area errors');
         this.clearHiddenAreaErrors();
         
-        // グループバリデーションの状態も再評価
-        this.reevaluateGroupValidations();
+        // グループバリデーションの状態を再評価（すべてのグループのisTouchedをリセット）
+        this.log('Step 3: Resetting all group validation states');
+        this.resetAllGroupValidationStates();
         
+        this.log('Step 4: Updating count');
         this.updateCount();
+        
+        this.log('=== Manual count update completed ===');
+        console.log('🔥 DEBUG: updateValidationCount completed');
     }
 
     /**
@@ -611,6 +621,7 @@ export class FormManager {
     private clearHiddenAreaErrors(): void {
         const allStates = this.fieldStates.getAllStates();
         
+        // フィールド状態から除外エリア内のフィールドをクリア
         for (const fieldId in allStates) {
             const element = document.querySelector(`[name='${fieldId}'], [id='${fieldId}']`);
             if (element && this.isFieldInHiddenAreaInternal(element as HTMLElement)) {
@@ -627,6 +638,48 @@ export class FormManager {
                 this.log(`Cleared error and isTouched flag for hidden field: ${fieldId}`);
             }
         }
+        
+        // 直接DOMからも除外エリア内のエラー要素をクリア（念のため）
+        const hiddenAreas = this.form.querySelectorAll('[data-validate-hidden]');
+        hiddenAreas.forEach(hiddenArea => {
+            // 除外エリア内のすべてのエラー要素をクリア
+            const errorElements = hiddenArea.querySelectorAll('[data-text="error"]');
+            errorElements.forEach(errorElement => {
+                if (errorElement instanceof HTMLElement) {
+                    errorElement.textContent = '';
+                    errorElement.style.display = 'none';
+                }
+            });
+            
+            // 除外エリア内のフィールドからエラークラスを削除
+            const fields = hiddenArea.querySelectorAll('input, select, textarea');
+            fields.forEach(field => {
+                if (field instanceof HTMLElement) {
+                    field.classList.remove('error', 'invalid');
+                    field.setAttribute('aria-invalid', 'false');
+                }
+            });
+        });
+        
+        // data-validate-hidden属性を直接持つフィールドもクリア
+        const hiddenFields = this.form.querySelectorAll('[data-validate-hidden]');
+        hiddenFields.forEach(field => {
+            if ((field instanceof HTMLInputElement || field instanceof HTMLSelectElement || field instanceof HTMLTextAreaElement)) {
+                // エラー要素をクリア
+                const parent = field.parentElement;
+                if (parent) {
+                    const errorElement = parent.querySelector('[data-text="error"]');
+                    if (errorElement instanceof HTMLElement) {
+                        errorElement.textContent = '';
+                        errorElement.style.display = 'none';
+                    }
+                }
+                
+                // フィールドからエラークラスを削除
+                field.classList.remove('error', 'invalid');
+                field.setAttribute('aria-invalid', 'false');
+            }
+        });
     }
 
     /**
@@ -659,9 +712,11 @@ export class FormManager {
     }
 
     /**
-     * グループバリデーションの状態を再評価（エラー表示はしない）
+     * 全グループバリデーションの状態をリセット（update時に使用）
      */
-    private reevaluateGroupValidations(): void {
+    private resetAllGroupValidationStates(): void {
+        this.log('=== Resetting all group validation states ===');
+        
         const groupValidators = [
             { attr: 'data-check_validate', type: 'checkbox' },
             { attr: 'data-radio_validate', type: 'radio' },
@@ -670,6 +725,8 @@ export class FormManager {
         
         groupValidators.forEach(({ attr, type }) => {
             const groupNodes = this.form.querySelectorAll(`[${attr}]`);
+            this.log(`Found ${groupNodes.length} groups with ${attr}`);
+            
             groupNodes.forEach((groupNode, idx) => {
                 const groupId = groupNode.getAttribute('name') || groupNode.getAttribute('id') || `${type}_group_${idx}`;
                 
@@ -681,18 +738,37 @@ export class FormManager {
                     fields = groupNode.querySelectorAll(`input[type=${type}]`);
                 }
                 
-                // 除外エリア内のグループの場合はisTouchedもリセット
-                if (this.isFieldInHiddenAreaInternal(groupNode as HTMLElement)) {
-                    this.fieldStates.updateField(groupId, {
-                        isTouched: false  // 除外エリア内のグループのisTouchedフラグをリセット
-                    });
-                    this.log(`Reset isTouched flag for hidden group: ${groupId}`);
-                }
+                const isInHiddenArea = this.isFieldInHiddenAreaInternal(groupNode as HTMLElement);
+                const validateRules = groupNode.getAttribute(attr);
+                const isRequired = validateRules && validateRules.includes('required');
                 
-                // グループバリデーションを再実行
+                // 現在の状態を取得
+                const currentState = this.fieldStates.getField(groupId);
+                this.log(`Group ${groupId}: isInHiddenArea=${isInHiddenArea}, isRequired=${isRequired}, currentState:`, currentState);
+                
+                // 状態をリセット（isTouchedをfalseに）
+                this.fieldStates.updateField(groupId, {
+                    isTouched: false,  // 必ずisTouchedをリセット
+                    isValid: isInHiddenArea || !isRequired,  // 除外エリア内または非必須の場合は有効
+                    errors: []
+                });
+                
+                // エラー表示をクリア
+                this.errorDisplay.clearField(groupId);
+                
+                this.log(`Reset group validation state for ${groupId}: isInHiddenArea=${isInHiddenArea}, isRequired=${isRequired}`);
+                
+                // 状態リセット後にバリデーションを再実行（isUserAction: false）
+                this.log(`About to call validateGroupField for ${groupId} with isUserAction=false`);
                 this.validateGroupField(groupNode as HTMLElement, fields, groupId, attr, false);
+                
+                // 再実行後の状態を確認
+                const afterState = this.fieldStates.getField(groupId);
+                this.log(`After validateGroupField - Group ${groupId} state:`, afterState);
             });
         });
+        
+        this.log('=== Reset all group validation states completed ===');
     }
 
     // グループバリデーションのセットアップ
@@ -744,6 +820,10 @@ export class FormManager {
         attr: string,
         isUserAction: boolean = false
     ) {
+        this.log(`=== validateGroupField called for ${groupId} ===`);
+        this.log(`  isUserAction: ${isUserAction}`);
+        this.log(`  groupNode:`, groupNode);
+        
         // 除外エリア内のグループはバリデーションをスキップ
         if (this.isFieldInHiddenAreaInternal(groupNode)) {
             this.log(`Skipping group validation for hidden area: ${groupId}`);
@@ -772,6 +852,9 @@ export class FormManager {
         if (validateRules && validateRules.includes('required')) {
             isRequired = true;
         }
+        
+        this.log(`  validateRules: ${validateRules}`);
+        this.log(`  isRequired: ${isRequired}`);
 
         // RequiredValidatorのデフォルトメッセージ仕様
         const defaultMessages = {
@@ -813,33 +896,53 @@ export class FormManager {
                 }
             }
         }
+        
+        this.log(`  After validation check - isValid: ${isValid}`);
 
-        // isTouched管理 - isUserActionがfalseの場合は明示的にfalseに設定
+        // isTouched管理の修正
         const state = this.fieldStates.getField(groupId);
+        this.log(`  Current state before isTouched update:`, state);
+        
         let isTouched: boolean;
         
         if (isUserAction) {
             // ユーザーアクションの場合はtrueに設定
             isTouched = true;
+            this.log(`Setting isTouched=true for user action on group ${groupId}`);
         } else {
-            // プログラムによる再評価の場合はfalseに設定
+            // プログラムによる再評価の場合は、既存のisTouchedを保持しない（常にfalse）
             isTouched = false;
+            this.log(`Setting isTouched=false for programmatic validation on group ${groupId}`);
         }
+        
+        this.log(`  Final isTouched value: ${isTouched}`);
 
         this.fieldStates.updateField(groupId, {
             isValid,
             errors: (isValid || !isRequired) ? [] : [{ rule: 'required', message: errorMsg, value: undefined }],
             isTouched
         });
+        
+        // 更新後の状態を確認
+        const updatedState = this.fieldStates.getField(groupId);
+        this.log(`  State after update:`, updatedState);
 
-        // エラー表示（必須の場合のみ、かつisTouchedがtrueの場合のみ）
-        if (!isValid && isTouched && isRequired) {
+        // エラー表示の判定を修正
+        // 必須でない場合、または有効な場合、またはisTouchedがfalseの場合はエラー表示しない
+        const shouldShowError = isRequired && !isValid && isTouched;
+        this.log(`  Error display decision: isRequired=${isRequired}, isValid=${isValid}, isTouched=${isTouched}, shouldShowError=${shouldShowError}`);
+        
+        if (shouldShowError) {
             this.errorDisplay.showFieldError(groupId, errorMsg, groupNode);
+            this.log(`Showing error for group ${groupId}: ${errorMsg}, isTouched: ${isTouched}`);
         } else {
             this.errorDisplay.clearField(groupId);
+            this.log(`Clearing error for group ${groupId}, isValid: ${isValid}, isRequired: ${isRequired}, isTouched: ${isTouched}`);
         }
 
         // カウント更新
         this.updateCount();
+        
+        this.log(`=== validateGroupField completed for ${groupId} ===`);
     }
 }

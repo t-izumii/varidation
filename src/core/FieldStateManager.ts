@@ -187,6 +187,53 @@ export class FieldStateManager {
     reevaluateFieldRequiredState(fieldId: string, isFieldInHiddenAreaCallback?: (fieldId: string) => boolean): void {
         const element = document.querySelector(`[name='${fieldId}'], [id='${fieldId}']`);
         if (!element || !(element instanceof HTMLInputElement || element instanceof HTMLSelectElement || element instanceof HTMLTextAreaElement)) {
+            // グループバリデーションの場合をチェック
+            const groupElement = document.querySelector(`[id='${fieldId}']`);
+            if (groupElement && (groupElement.hasAttribute('data-check_validate') || 
+                                groupElement.hasAttribute('data-radio_validate') || 
+                                groupElement.hasAttribute('data-select_validate'))) {
+                
+                const currentState = this.fields.get(fieldId);
+                if (!currentState) {
+                    return;
+                }
+                
+                // グループの除外エリア内かチェック
+                const isInHiddenArea = isFieldInHiddenAreaCallback ? 
+                                      isFieldInHiddenAreaCallback(fieldId) : 
+                                      this.checkFieldInHiddenArea(fieldId);
+                
+                // グループの必須判定
+                let isRequired = false;
+                const checkValidate = groupElement.getAttribute('data-check_validate');
+                const radioValidate = groupElement.getAttribute('data-radio_validate');
+                const selectValidate = groupElement.getAttribute('data-select_validate');
+                
+                if ((checkValidate && checkValidate.includes('required')) ||
+                    (radioValidate && radioValidate.includes('required')) ||
+                    (selectValidate && selectValidate.includes('required'))) {
+                    isRequired = true;
+                }
+                
+                isRequired = !isInHiddenArea && isRequired;
+                
+                // 状態を更新（グループの場合はisTouchedもリセット）
+                const updates: Partial<FieldState> = {
+                    isValid: isInHiddenArea || !isRequired,
+                    errors: (isInHiddenArea || !isRequired) ? [] : currentState.errors,
+                    isTouched: false  // グループバリデーションの場合は必ずisTouchedをリセット
+                };
+                
+                this.fields.set(fieldId, {
+                    ...currentState,
+                    ...updates
+                });
+                
+                if (typeof console !== 'undefined' && console.log) {
+                    console.log(`[FieldStateManager] Reevaluated group ${fieldId}: isInHiddenArea=${isInHiddenArea}, isRequired=${isRequired}, resetTouched=true`);
+                }
+                return;
+            }
             return;
         }
         
