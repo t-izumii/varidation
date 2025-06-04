@@ -254,7 +254,7 @@ export class FormManager {
         }
         
         try {
-            const result = await this.validationEngine.validateField(field, value, this.options.customMessages);
+            const result = await this.validationEngine.validateField(field, value, this.options.customMessages, this.options.validationOptions);
             this.log(`Validation result for ${fieldId}:`, result);
             
             // フィールド状態を更新

@@ -25,11 +25,13 @@ export class ValidationEngine {
     async validateField(
         field: HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement,
         value: string,
-        customMessages: Record<string, string> = {}
+        customMessages: Record<string, string> = {},
+        validationOptions?: Record<string, any>
     ): Promise<ValidationResult> {
         // ValidatorのvalidateElementを使う
         return await this.validator.validateElement(field, {
-            customMessages
+            customMessages,
+            validationOptions
         });
     }
 

@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>電話番号・郵便番号 ValidationOptions テスト</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="text"] {
+            width: 300px;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        input.error {
+            border-color: #dc3545;
+            background-color: #fff5f5;
+        }
+        .error-text {
+            color: #dc3545;
+            font-size: 14px;
+            margin-top: 5px;
+            min-height: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .test-result {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background-color: #f8f9fa;
+        }
+        .success {
+            color: #28a745;
+        }
+        .error {
+            color: #dc3545;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .test-section {
+            margin-bottom: 40px;
+        }
+    </style>
+</head>
+<body>
+    <h1>電話番号・郵便番号 ValidationOptions テスト</h1>
+    
+    <div class="test-section">
+        <h2>電話番号バリデーター テスト</h2>
+        <div class="test-result" id="telTestResults">
+            <h3>テスト結果:</h3>
+            <div id="telTestOutput"></div>
+        </div>
+        <button type="button" onclick="runTelTests()">電話番号テスト実行</button>
+    </div>
+
+    <div class="test-section">
+        <h2>郵便番号バリデーター テスト</h2>
+        <div class="test-result" id="postalTestResults">
+            <h3>テスト結果:</h3>
+            <div id="postalTestOutput"></div>
+        </div>
+        <button type="button" onclick="runPostalTests()">郵便番号テスト実行</button>
+    </div>
+
+    <div class="test-section">
+        <h2>統合テスト</h2>
+        <button type="button" onclick="runAllTests()">すべてのテスト実行</button>
+    </div>
+
+    <script>
+        // TelValidator クラスの簡易実装（テスト用）
+        class TelValidator {
+            constructor() {
+                this.patterns = {
+                    telWithHyphens: /^0(((\d{1}-\d{4}|\d{2}-\d{3,4}|\d{3}-\d{2,3}|\d{4}-\d{1})-\d{4})|\d{3}-\d{3}-\d{3})$/,
+                    telWithoutHyphens: /^0\d{9,10}$/,
+                    halfWidth: /^[0-9\-]+$/
+                };
+                this.defaultMessages = {
+                    default: '電話番号の形式が正しくありません。',
+                    withHyphens: '電話番号はハイフン付きの形式で入力してください。',
+                    withoutHyphens: '電話番号はハイフンなしの形式で入力してください。',
+                    halfWidth: '半角数字で入力してください。'
+                };
+            }
+
+            validate(value, options = {}) {
+                if (!value || value.trim() === '') {
+                    return { isValid: false, errors: [{ rule: 'required', message: '電話番号を入力してください。', value }] };
+                }
+
+                if (!this.patterns.halfWidth.test(value)) {
+                    return { 
+                        isValid: false, 
+                        errors: [{ rule: 'tel-halfwidth', message: this.defaultMessages.halfWidth, value }] 
+                    };
+                }
+
+                const allowHyphens = options.allowHyphens ?? null;
+                let isValid = false;
+                let errorMessage = this.defaultMessages.default;
+
+                if (allowHyphens === true) {
+                    isValid = this.patterns.telWithHyphens.test(value);
+                    errorMessage = this.defaultMessages.withHyphens;
+                } else if (allowHyphens === false) {
+                    isValid = this.patterns.telWithoutHyphens.test(value);
+                    errorMessage = this.defaultMessages.withoutHyphens;
+                } else {
+                    isValid = this.patterns.telWithHyphens.test(value) || 
+                             this.patterns.telWithoutHyphens.test(value);
+                }
+
+                if (!isValid) {
+                    return { 
+                        isValid: false, 
+                        errors: [{ rule: 'tel', message: errorMessage, value }] 
+                    };
+                }
+
+                return { isValid: true, errors: [] };
+            }
+        }
+
+        // PostalCodeValidator クラスの簡易実装（テスト用）
+        class PostalCodeValidator {
+            constructor() {
+                this.patterns = {
+                    postalCodeWithHyphens: /^\d{3}-\d{4}$/,
+                    postalCodeWithoutHyphens: /^\d{7}$/,
+                    halfWidth: /^[0-9\-]+$/
+                };
+                this.defaultMessages = {
+                    default: '郵便番号の形式が正しくありません。',
+                    withHyphens: '郵便番号はハイフン付きの形式で入力してください。',
+                    withoutHyphens: '郵便番号はハイフンなしの形式で入力してください。',
+                    halfWidth: '半角数字で入力してください。'
+                };
+            }
+
+            validate(value, options = {}) {
+                if (!value || value.trim() === '') {
+                    return { isValid: false, errors: [{ rule: 'required', message: '郵便番号を入力してください。', value }] };
+                }
+
+                if (!this.patterns.halfWidth.test(value)) {
+                    return { 
+                        isValid: false, 
+                        errors: [{ rule: 'postal-code-halfwidth', message: this.defaultMessages.halfWidth, value }] 
+                    };
+                }
+
+                const allowHyphens = options.allowHyphens ?? null;
+                let isValid = false;
+                let errorMessage = this.defaultMessages.default;
+
+                if (allowHyphens === true) {
+                    isValid = this.patterns.postalCodeWithHyphens.test(value);
+                    errorMessage = this.defaultMessages.withHyphens;
+                } else if (allowHyphens === false) {
+                    isValid = this.patterns.postalCodeWithoutHyphens.test(value);
+                    errorMessage = this.defaultMessages.withoutHyphens;
+                } else {
+                    isValid = this.patterns.postalCodeWithHyphens.test(value) || 
+                             this.patterns.postalCodeWithoutHyphens.test(value);
+                }
+
+                if (!isValid) {
+                    return { 
+                        isValid: false, 
+                        errors: [{ rule: 'postal-code', message: errorMessage, value }] 
+                    };
+                }
+
+                return { isValid: true, errors: [] };
+            }
+        }
+
+        // 電話番号テスト実行関数
+        function runTelTests() {
+            const telValidator = new TelValidator();
+            const testCases = [
+                {
+                    description: 'ハイフン付き電話番号 (allowHyphens: true)',
+                    value: '03-1234-5678',
+                    options: { allowHyphens: true },
+                    expected: true
+                },
+                {
+                    description: 'ハイフンなし電話番号 (allowHyphens: true)',
+                    value: '03123456780',
+                    options: { allowHyphens: true },
+                    expected: false
+                },
+                {
+                    description: 'ハイフン付き電話番号 (allowHyphens: false)',
+                    value: '03-1234-5678',
+                    options: { allowHyphens: false },
+                    expected: false
+                },
+                {
+                    description: 'ハイフンなし電話番号 (allowHyphens: false)',
+                    value: '03123456780',
+                    options: { allowHyphens: false },
+                    expected: true
+                },
+                {
+                    description: 'ハイフン付き電話番号 (デフォルト)',
+                    value: '03-1234-5678',
+                    options: {},
+                    expected: true
+                },
+                {
+                    description: 'ハイフンなし電話番号 (デフォルト)',
+                    value: '03123456780',
+                    options: {},
+                    expected: true
+                }
+            ];
+
+            const results = testCases.map(testCase => {
+                const result = telValidator.validate(testCase.value, testCase.options);
+                const passed = result.isValid === testCase.expected;
+                
+                return {
+                    description: testCase.description,
+                    value: testCase.value,
+                    options: JSON.stringify(testCase.options),
+                    expected: testCase.expected,
+                    actual: result.isValid,
+                    passed: passed,
+                    error: result.errors.length > 0 ? result.errors[0].message : null
+                };
+            });
+
+            displayResults(results, 'telTestOutput');
+        }
+
+        // 郵便番号テスト実行関数
+        function runPostalTests() {
+            const postalValidator = new PostalCodeValidator();
+            const testCases = [
+                {
+                    description: 'ハイフン付き郵便番号 (allowHyphens: true)',
+                    value: '123-4567',
+                    options: { allowHyphens: true },
+                    expected: true
+                },
+                {
+                    description: 'ハイフンなし郵便番号 (allowHyphens: true)',
+                    value: '1234567',
+                    options: { allowHyphens: true },
+                    expected: false
+                },
+                {
+                    description: 'ハイフン付き郵便番号 (allowHyphens: false)',
+                    value: '123-4567',
+                    options: { allowHyphens: false },
+                    expected: false
+                },
+                {
+                    description: 'ハイフンなし郵便番号 (allowHyphens: false)',
+                    value: '1234567',
+                    options: { allowHyphens: false },
+                    expected: true
+                },
+                {
+                    description: 'ハイフン付き郵便番号 (デフォルト)',
+                    value: '123-4567',
+                    options: {},
+                    expected: true
+                },
+                {
+                    description: 'ハイフンなし郵便番号 (デフォルト)',
+                    value: '1234567',
+                    options: {},
+                    expected: true
+                }
+            ];
+
+            const results = testCases.map(testCase => {
+                const result = postalValidator.validate(testCase.value, testCase.options);
+                const passed = result.isValid === testCase.expected;
+                
+                return {
+                    description: testCase.description,
+                    value: testCase.value,
+                    options: JSON.stringify(testCase.options),
+                    expected: testCase.expected,
+                    actual: result.isValid,
+                    passed: passed,
+                    error: result.errors.length > 0 ? result.errors[0].message : null
+                };
+            });
+
+            displayResults(results, 'postalTestOutput');
+        }
+
+        function displayResults(results, outputId) {
+            const output = document.getElementById(outputId);
+            let html = '<table>';
+            html += '<tr><th>テストケース</th><th>値</th><th>オプション</th><th>期待値</th><th>実際</th><th>結果</th><th>エラー</th></tr>';
+            
+            results.forEach(result => {
+                const resultClass = result.passed ? 'success' : 'error';
+                const resultText = result.passed ? '✅ 成功' : '❌ 失敗';
+                
+                html += `<tr>
+                    <td>${result.description}</td>
+                    <td>${result.value}</td>
+                    <td>${result.options}</td>
+                    <td>${result.expected}</td>
+                    <td>${result.actual}</td>
+                    <td class="${resultClass}">${resultText}</td>
+                    <td>${result.error || '-'}</td>
+                </tr>`;
+            });
+            
+            html += '</table>';
+            output.innerHTML = html;
+        }
+
+        function runAllTests() {
+            runTelTests();
+            runPostalTests();
+        }
+
+        // ページ読み込み時にテストを実行
+        window.addEventListener('DOMContentLoaded', runAllTests);
+    </script>
+</body>
+</html>

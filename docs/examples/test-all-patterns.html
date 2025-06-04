@@ -175,7 +175,7 @@
         <div class="form-item">
             <div class="form-key">名前<span class="required">(必須)</span></div>
             <div class="form-val">
-                <input type="text" id="myInput" name="name" data-validate="required,name" value="">
+                <input type="text" id="myInput" name="name" data-validate="required,name,emesse1" value="">
                 <p class="error-text" data-text="error"></p>
             </div>
         </div>
@@ -380,7 +380,15 @@
         document.addEventListener('DOMContentLoaded', function() {
             FormValidator.init({
                 customMessages: {
-                    name: '名前を入力してください'
+                    emesse1: 'カスタムメッセージ'
+                },
+                validationOptions: {
+                    tel: {
+                        allowHyphens: false     // 電話番号はハイフン禁止
+                    },
+                    postalCode: {
+                        allowHyphens: false     // 郵便番号はハイフン禁止
+                    }
                 },
                 count: true,
                 disableSubmitUntilValid: true

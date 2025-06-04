@@ -43,6 +43,7 @@ export interface ValidatorOptions {
     originalEmail?: string;                 // メール確認用の元のメールアドレス
     usePostalCodeJS?: boolean;              // 郵便番号JSライブラリを使用するか
     onValidPostalCode?: (value: string) => void;  // 郵便番号バリデーション成功時のコールバック
+    validationOptions?: Record<string, any>; // バリデーターごとのオプション設定
     [key: string]: any;                     // その他の動的プロパティ
 }
 
@@ -89,6 +90,17 @@ export interface FormManagerOptions {
     animationDuration: number;           // アニメーション時間（ミリ秒）
   };
   customMessages: Record<string, string>; // カスタムエラーメッセージの辞書
+  // バリデーターごとのオプション設定
+  validationOptions?: {
+    tel?: {
+      allowHyphens?: boolean;            // 電話番号でハイフンを許可するか
+    };
+    postalCode?: {
+      allowHyphens?: boolean;            // 郵便番号でハイフンを許可するか
+    };
+    // 他のバリデーターオプションもここに追加可能
+    [key: string]: any;
+  };
   // イベントコールバック関数（オプション）
   onFieldValidated?: (data: FieldValidationEventData) => void;      // フィールドバリデーション完了時
   onFormValidated?: (data: FormValidationEventData) => void;        // フォームバリデーション完了時

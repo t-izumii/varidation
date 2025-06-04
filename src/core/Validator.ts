@@ -145,11 +145,30 @@ export class Validator {
                 ruleArray = ruleArray.filter(r => r !== 'replace');
             }
         }
+        
         // オプションにバリデーションタイプを追加（互換性のため）
         const validationOptions = {
             ...options,
             validationTypes: ruleArray
         };
+        
+        // validationOptionsから特定のバリデーター用のオプションを取得
+        if (options?.validationOptions) {
+            // telバリデーター用のオプションを設定
+            if (ruleArray.includes('tel') && options.validationOptions.tel) {
+                if (options.validationOptions.tel.allowHyphens !== undefined) {
+                    validationOptions.allowHyphens = options.validationOptions.tel.allowHyphens;
+                }
+            }
+            // postal-codeバリデーター用のオプションを設定
+            if (ruleArray.includes('postal-code') && options.validationOptions.postalCode) {
+                if (options.validationOptions.postalCode.allowHyphens !== undefined) {
+                    validationOptions.allowHyphens = options.validationOptions.postalCode.allowHyphens;
+                }
+            }
+            // 他のバリデーター用のオプションもここに追加可能
+        }
+        
         // テキストバリデーター用のタイプを設定
         if (ruleArray.includes('number') || ruleArray.includes('hiragana') || 
             ruleArray.includes('katakana') || ruleArray.includes('password') || ruleArray.includes('halfWidth')) {
@@ -158,6 +177,7 @@ export class Validator {
                 validationOptions.textType = textType;
             }
         }
+        
         // バリデーターチェーンを構築
         const validatorChain = this.buildValidatorChain(ruleArray, validationOptions);
         if (!validatorChain) {
@@ -167,6 +187,7 @@ export class Validator {
                 errors: []
             };
         }
+        
         // バリデーションを実行
         try {
             return await validatorChain.validate(processedValue, validationOptions);

@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ValidationOptions テスト</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="text"] {
+            width: 300px;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        input.error {
+            border-color: #dc3545;
+            background-color: #fff5f5;
+        }
+        .error-text {
+            color: #dc3545;
+            font-size: 14px;
+            margin-top: 5px;
+            min-height: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .test-result {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background-color: #f8f9fa;
+        }
+        .success {
+            color: #28a745;
+        }
+        .error {
+            color: #dc3545;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <h1>ValidationOptions テスト</h1>
+    
+    <div class="test-result" id="testResults">
+        <h3>テスト結果:</h3>
+        <div id="testOutput"></div>
+    </div>
+
+    <h2>TelValidator テスト</h2>
+    
+    <form id="testForm">
+        <div class="form-group">
+            <label for="tel1">電話番号 (ハイフン許可: true)</label>
+            <input type="text" id="tel1" name="tel1" data-validate="required,tel" placeholder="03-1234-5678">
+            <div class="error-text" data-text="error"></div>
+        </div>
+        
+        <div class="form-group">
+            <label for="tel2">電話番号 (ハイフン許可: false)</label>
+            <input type="text" id="tel2" name="tel2" data-validate="required,tel" placeholder="03-1234-5678">
+            <div class="error-text" data-text="error"></div>
+        </div>
+        
+        <div class="form-group">
+            <label for="tel3">電話番号 (デフォルト設定)</label>
+            <input type="text" id="tel3" name="tel3" data-validate="required,tel" placeholder="03-1234-5678">
+            <div class="error-text" data-text="error"></div>
+        </div>
+        
+        <button type="button" onclick="runTests()">バリデーションテスト実行</button>
+    </form>
+
+    <script>
+        // TelValidator クラスの簡易実装（テスト用）
+        class TelValidator {
+            constructor() {
+                this.patterns = {
+                    telWithHyphens: /^0(((\d{1}-\d{4}|\d{2}-\d{3,4}|\d{3}-\d{2,3}|\d{4}-\d{1})-\d{4})|\d{3}-\d{3}-\d{3})$/,
+                    telWithoutHyphens: /^0\d{9,10}$/,
+                    halfWidth: /^[0-9\-]+$/
+                };
+                this.defaultMessages = {
+                    default: '電話番号の形式が正しくありません。',
+                    withHyphens: '電話番号はハイフン付きの形式で入力してください。',
+                    withoutHyphens: '電話番号はハイフンなしの形式で入力してください。',
+                    halfWidth: '半角数字で入力してください。'
+                };
+            }
+
+            validate(value, options = {}) {
+                // 空の場合はスキップ
+                if (!value || value.trim() === '') {
+                    return { isValid: false, errors: [{ rule: 'required', message: '電話番号を入力してください。', value }] };
+                }
+
+                // 半角数字チェック
+                if (!this.patterns.halfWidth.test(value)) {
+                    return { 
+                        isValid: false, 
+                        errors: [{ rule: 'tel-halfwidth', message: this.defaultMessages.halfWidth, value }] 
+                    };
+                }
+
+                // ハイフンの許可設定を取得
+                const allowHyphens = options.allowHyphens ?? null;
+
+                // 電話番号形式のチェック
+                let isValid = false;
+                let errorMessage = this.defaultMessages.default;
+
+                if (allowHyphens === true) {
+                    isValid = this.patterns.telWithHyphens.test(value);
+                    errorMessage = this.defaultMessages.withHyphens;
+                } else if (allowHyphens === false) {
+                    isValid = this.patterns.telWithoutHyphens.test(value);
+                    errorMessage = this.defaultMessages.withoutHyphens;
+                } else {
+                    // null の場合は両方許可
+                    isValid = this.patterns.telWithHyphens.test(value) || 
+                             this.patterns.telWithoutHyphens.test(value);
+                }
+
+                if (!isValid) {
+                    return { 
+                        isValid: false, 
+                        errors: [{ rule: 'tel', message: errorMessage, value }] 
+                    };
+                }
+
+                return { isValid: true, errors: [] };
+            }
+        }
+
+        // テスト実行関数
+        function runTests() {
+            const telValidator = new TelValidator();
+            const testCases = [
+                {
+                    description: 'ハイフン付き電話番号 (allowHyphens: true)',
+                    value: '03-1234-5678',
+                    options: { allowHyphens: true },
+                    expected: true
+                },
+                {
+                    description: 'ハイフンなし電話番号 (allowHyphens: true)',
+                    value: '03123456780',
+                    options: { allowHyphens: true },
+                    expected: false
+                },
+                {
+                    description: 'ハイフン付き電話番号 (allowHyphens: false)',
+                    value: '03-1234-5678',
+                    options: { allowHyphens: false },
+                    expected: false
+                },
+                {
+                    description: 'ハイフンなし電話番号 (allowHyphens: false)',
+                    value: '03123456780',
+                    options: { allowHyphens: false },
+                    expected: true
+                },
+                {
+                    description: 'ハイフン付き電話番号 (デフォルト)',
+                    value: '03-1234-5678',
+                    options: {},
+                    expected: true
+                },
+                {
+                    description: 'ハイフンなし電話番号 (デフォルト)',
+                    value: '03123456780',
+                    options: {},
+                    expected: true
+                }
+            ];
+
+            let results = [];
+            testCases.forEach((testCase, index) => {
+                const result = telValidator.validate(testCase.value, testCase.options);
+                const passed = result.isValid === testCase.expected;
+                
+                results.push({
+                    description: testCase.description,
+                    value: testCase.value,
+                    options: JSON.stringify(testCase.options),
+                    expected: testCase.expected,
+                    actual: result.isValid,
+                    passed: passed,
+                    error: result.errors.length > 0 ? result.errors[0].message : null
+                });
+            });
+
+            displayResults(results);
+        }
+
+        function displayResults(results) {
+            const output = document.getElementById('testOutput');
+            let html = '<table>';
+            html += '<tr><th>テストケース</th><th>値</th><th>オプション</th><th>期待値</th><th>実際</th><th>結果</th><th>エラー</th></tr>';
+            
+            results.forEach(result => {
+                const resultClass = result.passed ? 'success' : 'error';
+                const resultText = result.passed ? '✅ 成功' : '❌ 失敗';
+                
+                html += `<tr>
+                    <td>${result.description}</td>
+                    <td>${result.value}</td>
+                    <td>${result.options}</td>
+                    <td>${result.expected}</td>
+                    <td>${result.actual}</td>
+                    <td class="${resultClass}">${resultText}</td>
+                    <td>${result.error || '-'}</td>
+                </tr>`;
+            });
+            
+            html += '</table>';
+            output.innerHTML = html;
+        }
+
+        // ページ読み込み時にテストを実行
+        window.addEventListener('DOMContentLoaded', runTests);
+    </script>
+</body>
+</html>
