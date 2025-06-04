@@ -87,7 +87,6 @@ export interface FormManagerOptions {
   errorDisplay: {
     showOnValidation: boolean;           // バリデーション時にエラーを表示するか
     clearOnFocus: boolean;               // フォーカス時にエラーをクリアするか
-    animationDuration: number;           // アニメーション時間（ミリ秒）
   };
   customMessages: Record<string, string>; // カスタムエラーメッセージの辞書
   // バリデーターごとのオプション設定

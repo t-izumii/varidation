@@ -36,8 +36,7 @@ export class FormManager {
         },
         errorDisplay: {
             showOnValidation: true,
-            clearOnFocus: true,
-            animationDuration: 200
+            clearOnFocus: true
         },
         onCountUpdated: function(data: { total: number; valid: number }) {
             var el = document.querySelector('[data-count_validate]');

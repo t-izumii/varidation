@@ -152,12 +152,8 @@
         
         .postal-group {
             display: flex;
-            align-items: center;
+            flex-direction: column;
             gap: 5px;
-        }
-        
-        .postal-code-input {
-            flex: 0 0 120px;
         }
     </style>
 </head>
@@ -230,9 +226,9 @@
             <div class="form-key">郵便番号<span class="required">(必須)</span></div>
             <div class="form-val">
                 <div class="postal-group">
-                    〒<input type="text" name="postal" class="p-postal-code postal-code-input" data-validate="required,postal-code,replace" size="8" maxlength="8" placeholder="123-4567">
+                    <input type="text" name="postal" class="p-postal-code" data-validate="required,postal-code,replace" size="8" maxlength="8" placeholder="123-4567">
+                    <p class="error-text" data-text="error"></p>
                 </div>
-                <p class="error-text" data-text="error"></p>
             </div>
         </div>
         
