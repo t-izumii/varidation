@@ -745,25 +745,43 @@ export class FormManager {
                 const currentState = this.fieldStates.getField(groupId);
                 this.log(`Group ${groupId}: isInHiddenArea=${isInHiddenArea}, isRequired=${isRequired}, currentState:`, currentState);
                 
-                // 状態をリセット（isTouchedをfalseに）
-                this.fieldStates.updateField(groupId, {
-                    isTouched: false,  // 必ずisTouchedをリセット
-                    isValid: isInHiddenArea || !isRequired,  // 除外エリア内または非必須の場合は有効
-                    errors: []
-                });
-                
-                // エラー表示をクリア
-                this.errorDisplay.clearField(groupId);
-                
-                this.log(`Reset group validation state for ${groupId}: isInHiddenArea=${isInHiddenArea}, isRequired=${isRequired}`);
-                
-                // 状態リセット後にバリデーションを再実行（isUserAction: false）
-                this.log(`About to call validateGroupField for ${groupId} with isUserAction=false`);
-                this.validateGroupField(groupNode as HTMLElement, fields, groupId, attr, false);
+                if (isInHiddenArea) {
+                    // 除外エリア内のグループは状態をリセット（isTouchedもfalseに）
+                    this.fieldStates.updateField(groupId, {
+                        isTouched: false,
+                        isValid: true,  // 除外エリア内は常に有効
+                        errors: []
+                    });
+                    
+                    // エラー表示をクリア
+                    this.errorDisplay.clearField(groupId);
+                    
+                    this.log(`Reset group validation state for hidden area ${groupId}`);
+                    
+                    // 除外エリア内のグループは状態リセット後にバリデーションを再実行（isUserAction: false）
+                    this.log(`About to call validateGroupField for hidden area ${groupId} with isUserAction=false`);
+                    this.validateGroupField(groupNode as HTMLElement, fields, groupId, attr, false);
+                } else {
+                    // 除外エリア外のグループはisTouchedを保持（エラー表示を維持）
+                    const preservedTouched = currentState?.isTouched || false;
+                    const preservedValid = currentState?.isValid !== undefined ? currentState.isValid : !isRequired;
+                    const preservedErrors = preservedTouched && !preservedValid ? currentState?.errors || [] : [];
+                    
+                    this.fieldStates.updateField(groupId, {
+                        isTouched: preservedTouched,  // 既存のisTouchedを保持
+                        isValid: preservedValid,  // 既存のisValidを保持
+                        errors: preservedErrors  // 既存のエラーを保持（isTouchedがtrueかつ無効な場合のみ）
+                    });
+                    
+                    this.log(`Preserved state for group ${groupId}: isTouched=${preservedTouched}, isValid=${preservedValid}`);
+                    
+                    // 除外エリア外のグループは既存の状態を維持し、バリデーションの再実行はしない
+                    // これにより、既にエラー表示されているグループのエラーメッセージが保持される
+                }
                 
                 // 再実行後の状態を確認
                 const afterState = this.fieldStates.getField(groupId);
-                this.log(`After validateGroupField - Group ${groupId} state:`, afterState);
+                this.log(`After state update - Group ${groupId} state:`, afterState);
             });
         });
         
@@ -909,9 +927,9 @@ export class FormManager {
             isTouched = true;
             this.log(`Setting isTouched=true for user action on group ${groupId}`);
         } else {
-            // プログラムによる再評価の場合は、既存のisTouchedを保持しない（常にfalse）
-            isTouched = false;
-            this.log(`Setting isTouched=false for programmatic validation on group ${groupId}`);
+            // プログラムによる再評価の場合は、既存のisTouchedを保持
+            isTouched = state?.isTouched || false;
+            this.log(`Preserving existing isTouched=${isTouched} for programmatic validation on group ${groupId}`);
         }
         
         this.log(`  Final isTouched value: ${isTouched}`);
