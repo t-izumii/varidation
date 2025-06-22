@@ -364,6 +364,9 @@ export class FormManager {
 
         await Promise.all(promises);
 
+        // グループバリデーションも実行（エラー表示を強制的に行う）
+        this.validateAllGroupFields();
+
         // フォーム全体のバリデーション結果を発火
         this.eventManager.emit(ValidationEvents.FORM_VALIDATED, {
             form: this.form,
@@ -685,6 +688,7 @@ export class FormManager {
      * 全グループフィールドをバリデーション（エラー表示を強制的に行う）
      */
     private validateAllGroupFields(): void {
+        this.log('=== validateAllGroupFields called ===');
         const groupValidators = [
             { attr: 'data-check_validate', type: 'checkbox' },
             { attr: 'data-radio_validate', type: 'radio' },
@@ -693,6 +697,8 @@ export class FormManager {
         
         groupValidators.forEach(({ attr, type }) => {
             const groupNodes = this.form.querySelectorAll(`[${attr}]`);
+            this.log(`Found ${groupNodes.length} groups with ${attr}`);
+            
             groupNodes.forEach((groupNode, idx) => {
                 const groupId = groupNode.getAttribute('name') || groupNode.getAttribute('id') || `${type}_group_${idx}`;
                 
@@ -704,10 +710,14 @@ export class FormManager {
                     fields = groupNode.querySelectorAll(`input[type=${type}]`);
                 }
                 
-                // グループバリデーションを実行（isTouchedをtrueに設定してエラー表示を強制）
-                this.validateGroupField(groupNode as HTMLElement, fields, groupId, attr, true);
+                this.log(`Validating group ${groupId} with ${fields.length} fields, forcing isTouched=true`);
+                
+                // グループバリデーションを強制実行（isTouchedを強制的にtrueに設定）
+                this.forceValidateGroupField(groupNode as HTMLElement, fields, groupId, attr);
             });
         });
+        
+        this.log('=== validateAllGroupFields completed ===');
     }
 
     /**
@@ -827,6 +837,99 @@ export class FormManager {
 
         // 初回バリデーション（isUserAction: false）
         this.validateGroupField(groupNode, fields, groupId, attr, false);
+    }
+
+    /**
+     * グループバリデーションを強制実行（フォーム送信時のエラー表示用）
+     */
+    private forceValidateGroupField(
+        groupNode: HTMLElement,
+        fields: NodeListOf<Element>,
+        groupId: string,
+        attr: string
+    ) {
+        this.log(`=== forceValidateGroupField called for ${groupId} ===`);
+        
+        // 除外エリア内のグループはバリデーションをスキップ
+        if (this.isFieldInHiddenAreaInternal(groupNode)) {
+            this.log(`Skipping forced group validation for hidden area: ${groupId}`);
+            return;
+        }
+        
+        const validateRules = groupNode.getAttribute(attr);
+        let isValid = true;
+        let errorMsg = '';
+        let isRequired = false;
+        
+        // requiredが明示的に指定されているかチェック
+        if (validateRules && validateRules.includes('required')) {
+            isRequired = true;
+        }
+        
+        this.log(`  validateRules: ${validateRules}, isRequired: ${isRequired}`);
+
+        // デフォルトメッセージ
+        const defaultMessages = {
+            'data-check_validate': {
+                agree: '個人情報保護方針の同意にチェックを入れてください。',
+                checkbox: 'チェックボックスを選択してください。',
+                default: '1つ以上選択してください'
+            },
+            'data-radio_validate': {
+                radiobox: 'ラジオボタンを選択してください。',
+                default: '1つ以上選択してください'
+            },
+            'data-select_validate': {
+                select: '選択してください。',
+                default: '選択してください'
+            }
+        };
+
+        // 必須の場合のみバリデーションを実行
+        if (isRequired) {
+            if (attr === 'data-check_validate' || attr === 'data-radio_validate') {
+                isValid = Array.from(fields).some((field: any) => field.checked);
+                if (!isValid) {
+                    let msg = '';
+                    if (validateRules && validateRules.includes('agree')) {
+                        msg = defaultMessages['data-check_validate'].agree;
+                    } else if (attr === 'data-check_validate') {
+                        msg = defaultMessages['data-check_validate'].checkbox;
+                    } else if (attr === 'data-radio_validate') {
+                        msg = defaultMessages['data-radio_validate'].radiobox;
+                    }
+                    errorMsg = msg || defaultMessages[attr].default;
+                }
+            } else if (attr === 'data-select_validate') {
+                isValid = Array.from(fields).some((field: any) => field.value);
+                if (!isValid) {
+                    errorMsg = defaultMessages['data-select_validate'].select;
+                }
+            }
+        }
+        
+        this.log(`  Validation result - isValid: ${isValid}, errorMsg: ${errorMsg}`);
+
+        // 強制的にisTouchedをtrueに設定してエラー表示を行う
+        this.fieldStates.updateField(groupId, {
+            isValid,
+            errors: (isValid || !isRequired) ? [] : [{ rule: 'required', message: errorMsg, value: undefined }],
+            isTouched: true  // 強制的にtrueに設定
+        });
+        
+        // エラー表示の判定
+        const shouldShowError = isRequired && !isValid;
+        this.log(`  Error display decision: shouldShowError=${shouldShowError}`);
+        
+        if (shouldShowError) {
+            this.errorDisplay.showFieldError(groupId, errorMsg, groupNode);
+            this.log(`Showing forced error for group ${groupId}: ${errorMsg}`);
+        } else {
+            this.errorDisplay.clearField(groupId);
+            this.log(`Clearing error for group ${groupId}`);
+        }
+
+        this.log(`=== forceValidateGroupField completed for ${groupId} ===`);
     }
 
     // グループバリデーションの実行
