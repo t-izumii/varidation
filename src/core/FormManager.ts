@@ -767,26 +767,40 @@ export class FormManager {
                     this.errorDisplay.clearField(groupId);
                     
                     this.log(`Reset group validation state for hidden area ${groupId}`);
-                    
-                    // 除外エリア内のグループは状態リセット後にバリデーションを再実行（isUserAction: false）
-                    this.log(`About to call validateGroupField for hidden area ${groupId} with isUserAction=false`);
-                    this.validateGroupField(groupNode as HTMLElement, fields, groupId, attr, false);
                 } else {
-                    // 除外エリア外のグループはisTouchedを保持（エラー表示を維持）
+                    // 除外エリア外のグループの場合、実際の値を再評価してisValidを設定
+                    let actualIsValid = true;
+                    
+                    if (isRequired) {
+                        if (attr === 'data-check_validate' || attr === 'data-radio_validate') {
+                            actualIsValid = Array.from(fields).some((field: any) => field.checked);
+                        } else if (attr === 'data-select_validate') {
+                            actualIsValid = Array.from(fields).some((field: any) => field.value);
+                        }
+                    }
+                    
+                    // 既存のisTouchedを保持し、実際の値に基づいてisValidを設定
                     const preservedTouched = currentState?.isTouched || false;
-                    const preservedValid = currentState?.isValid !== undefined ? currentState.isValid : !isRequired;
-                    const preservedErrors = preservedTouched && !preservedValid ? currentState?.errors || [] : [];
+                    const preservedErrors = preservedTouched && !actualIsValid ? (currentState?.errors || []) : [];
                     
                     this.fieldStates.updateField(groupId, {
                         isTouched: preservedTouched,  // 既存のisTouchedを保持
-                        isValid: preservedValid,  // 既存のisValidを保持
-                        errors: preservedErrors  // 既存のエラーを保持（isTouchedがtrueかつ無効な場合のみ）
+                        isValid: actualIsValid,  // 実際の値に基づいて設定
+                        errors: preservedErrors  // isTouchedがtrueかつ無効な場合のみエラーを保持
                     });
                     
-                    this.log(`Preserved state for group ${groupId}: isTouched=${preservedTouched}, isValid=${preservedValid}`);
+                    this.log(`Updated state for group ${groupId}: isTouched=${preservedTouched}, actualIsValid=${actualIsValid}`);
                     
-                    // 除外エリア外のグループは既存の状態を維持し、バリデーションの再実行はしない
-                    // これにより、既にエラー表示されているグループのエラーメッセージが保持される
+                    // エラー表示の更新
+                    if (preservedTouched && !actualIsValid) {
+                        // isTouchedがtrueで無効な場合はエラー表示を維持
+                        if (preservedErrors.length > 0) {
+                            this.errorDisplay.showFieldError(groupId, preservedErrors[0].message, groupNode as HTMLElement);
+                        }
+                    } else {
+                        // それ以外の場合はエラーをクリア
+                        this.errorDisplay.clearField(groupId);
+                    }
                 }
                 
                 // 再実行後の状態を確認

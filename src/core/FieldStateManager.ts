@@ -217,21 +217,21 @@ export class FieldStateManager {
                 
                 isRequired = !isInHiddenArea && isRequired;
                 
-                // 状態を更新（グループの場合はisTouchedもリセット）
+                // 状態を更新（除外エリアに入った場合のみエラーをクリア、isTouchedもリセット）
                 const updates: Partial<FieldState> = {
                     isValid: isInHiddenArea || !isRequired,
-                    errors: (isInHiddenArea || !isRequired) ? [] : currentState.errors,
-                    isTouched: false  // グループバリデーションの場合は必ずisTouchedをリセット
+                    errors: (isInHiddenArea || !isRequired) ? [] : currentState.errors
                 };
+                
+                // 除外エリアに入った場合のみisTouchedをリセット
+                if (isInHiddenArea) {
+                    updates.isTouched = false;
+                }
                 
                 this.fields.set(fieldId, {
                     ...currentState,
                     ...updates
                 });
-                
-                if (typeof console !== 'undefined' && console.log) {
-                    console.log(`[FieldStateManager] Reevaluated group ${fieldId}: isInHiddenArea=${isInHiddenArea}, isRequired=${isRequired}, resetTouched=true`);
-                }
                 return;
             }
             return;
@@ -283,10 +283,6 @@ export class FieldStateManager {
             ...currentState,
             ...updates
         });
-        
-        if (typeof console !== 'undefined' && console.log) {
-            console.log(`[FieldStateManager] Reevaluated field ${fieldId}: isInHiddenArea=${isInHiddenArea}, isRequired=${isRequired}, isValid=${isValid}, resetTouched=${shouldResetTouched}`);
-        }
     }
 
     /**
@@ -345,12 +341,6 @@ export class FieldStateManager {
                     continue;
                 }
             }
-        }
-        
-        // デバッグログを追加
-        if (typeof console !== 'undefined' && console.log) {
-            console.log('[FieldStateManager] Required fields:', required);
-            console.log('[FieldStateManager] Excluded fields:', excluded);
         }
         
         return required;
